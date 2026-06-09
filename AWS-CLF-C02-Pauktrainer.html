@@ -187,6 +187,14 @@
   .btn.aibtn:hover:not(:disabled){background:#4a2f8c}
   .menucol .btn.aibtn .cnt{opacity:.9}
   .ai-hint{font-size:12px;color:var(--muted);margin:2px 0 0}
+  /* unscheinbares „?"-Quick-Tip neben „KI wählt" (zeigt die KI-Begründung als Tooltip) */
+  .ai-why{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;margin-left:6px;
+    border-radius:50%;border:1px solid currentColor;font-size:10px;font-weight:700;opacity:.55;cursor:help;vertical-align:middle}
+  .ai-why:hover,.ai-why:focus{opacity:1;outline:none}
+  /* Anzahl-Dropdown */
+  .countrow{display:flex;align-items:center;gap:9px;justify-content:center;margin:6px 0 2px;font-size:13px;color:var(--ink2)}
+  .panel .countrow{justify-content:flex-start;margin:6px 0 12px}
+  select.countsel{border:1px solid var(--line);border-radius:6px;padding:6px 9px;font:600 13px "Segoe UI",sans-serif;background:#fff;color:var(--ink2);cursor:pointer}
 
   @media(max-width:1120px){
     .layout{flex-direction:column}
@@ -3659,7 +3667,7 @@ const SES_KEY  = "awsclf_c02_session_v2";   // laufender Durchlauf (resume)
 const HIST_KEY = "awsclf_c02_history_v2";    // persistente Historie (nur Delete-all löscht)
 const PASS_PCT = 70;
 /* ---- KI-adaptiver Modus: Sicherheitsgrenzen ---- */
-const AI_MAX_PRESENT      = 60;   // harte Obergrenze an Fragen pro KI-Lauf (verhindert Endlos-Lauf)
+const AI_MAX_PRESENT      = 300;  // absolute Notbremse an Fragen pro KI-Lauf (der sichtbare Stop ist S.aiTarget)
 const AI_MIN_BEFORE_FINISH = 15;  // so viele Fragen müssen min. drankommen, bevor die KI "fertig" sagen darf
 const AI_MAX_REPEATS      = 3;    // eine Frage darf pro Lauf höchstens so oft wiederholt werden ("nicht unendlich")
 const byId = id => QUESTIONS.find(x => x.id === id);
@@ -3726,6 +3734,12 @@ function recordRun(){
   saveHist();
 }
 function liveScore(){
+  // KI-Modus: nach PRÄSENTATIONEN zählen (jede beantwortete Frage, auch Wiederholungen) →
+  // die Zahlen wachsen monoton und springen bei einer Wiederholung NICHT zurück.
+  if(S.aiMode){
+    const t = S.trail||[]; let ok=0; t.forEach(x=>{ if(x.ok) ok++; });
+    return { ans:t.length, ok, total:(S.aiTarget||t.length) };
+  }
   let ans=0, ok=0;
   const uniq = [...new Set(S.order)];
   uniq.forEach(id=>{ if(S.committed[id]){ ans++; if(S.committed[id].ok) ok++; } });
@@ -3737,11 +3751,12 @@ function setHeader(){
   const inRun = !!(S && S.pos < S.order.length);
   const sc = S ? liveScore() : null;
   const ai = inRun && S.aiMode;
+  const aiTotal = ai ? (S.aiTarget||S.order.length) : 0;
   document.getElementById("metaProgress").textContent =
-    inRun ? (ai ? `Frage ${S.pos+1} · KI-adaptiv` : `Frage ${S.pos+1} / ${S.order.length}`) : "";
+    inRun ? (ai ? `Frage ${S.pos+1} / ${aiTotal} · KI` : `Frage ${S.pos+1} / ${S.order.length}`) : "";
   document.getElementById("metaScore").innerHTML = (inRun && sc.ans>0) ? `Richtig: <b>${sc.ok}/${sc.ans}</b>` : "";
   document.getElementById("abandonBtn").style.display = inRun ? "inline-block" : "none";
-  const pct = inRun ? (ai ? Math.min(100, Math.round((S.pos+1)/AI_MAX_PRESENT*100)) : Math.round(S.pos/S.order.length*100)) : 0;
+  const pct = inRun ? (ai ? Math.min(100, Math.round((S.pos+1)/aiTotal*100)) : Math.round(S.pos/S.order.length*100)) : 0;
   document.getElementById("progFill").style.width = pct + "%";
 }
 
@@ -3786,11 +3801,11 @@ function renderQuestion(){
 
   const aiRepeat = S.aiMode && (S.presentCount && S.presentCount[id] > 1);
   const qnumTxt = S.aiMode
-    ? `Frage ${S.pos+1} · KI-adaptiv${aiRepeat?` · Wiederholung ${S.presentCount[id]}/${AI_MAX_REPEATS}`:""}`
+    ? `Frage ${S.pos+1} von ${S.aiTarget||S.order.length} · KI-adaptiv${aiRepeat?` · Wiederholung dieser Frage ${S.presentCount[id]}/${AI_MAX_REPEATS}`:""}`
     : `Frage ${S.pos+1} von ${S.order.length}${S.mode!=="full"?" · Wiederholung":""}`;
-  const aiBadge = S.aiMode ? `<span class="badge aimode">🤖 KI wählt</span>` : "";
-  const aiReason = (S.aiMode && S.lastReason && !committed)
-    ? `<div class="ai-reason">KI-Begründung der Auswahl: ${escapeHtml(S.lastReason)}</div>` : "";
+  const aiWhy = (S.aiMode && S.lastReason)
+    ? `<span class="ai-why" title="${escapeAttr("Warum diese Frage? "+S.lastReason)}" tabindex="0">?</span>` : "";
+  const aiBadge = S.aiMode ? `<span class="badge aimode">🤖 KI wählt${aiWhy}</span>` : "";
 
   app.innerHTML = `
     <div class="qhead">
@@ -3798,7 +3813,6 @@ function renderQuestion(){
       <span style="display:flex;gap:8px">${aiBadge}<span class="badge ${q.domain}">${DOMAINS[q.domain].name}</span></span>
     </div>
     <div class="question">${escapeHtml(q.q)}</div>
-    ${aiReason}
     ${selnote}
     <ul class="options" id="optList">${opts}</ul>
     <div class="explain" id="explain"></div>
@@ -3885,14 +3899,16 @@ function renderOverview(){
          Antwortoptionen werden gemischt. Ziel: <b>${PASS_PCT}%+</b> (Bestehensgrenze 700/1000), idealerweise 100%.</p>
       <div class="domgrid">${grid}</div>
       <p style="font-size:13px">Aktuell <b>${QUESTIONS.length}</b> Frage(n) im Pool.</p>
+      <div class="countrow"><label for="heroCount">Wie viele Fragen üben?</label> ${countSelectHtml("heroCount")}</div>
       <div class="actions" style="justify-content:center">
         <button class="btn primary" id="startBtn">Übungsprüfung starten</button>
         <button class="btn aibtn" id="startAi" ${aiAvailable()?'':'disabled'}>🤖 KI-adaptiver Modus</button>
       </div>
-      <p class="ai-hint">KI-adaptiver Modus: GPT (Standard ${escapeHtml(AICFG.model)}) wählt nach jeder Antwort die wichtigste nächste Frage — wiederholt Schwachstellen, bis sie sitzen.${aiAvailable()?'':' <b>API-Key nötig</b> — klicke 🔑 rechts oben.'}</p>
+      <p class="ai-hint">KI-adaptiver Modus: GPT (Standard ${escapeHtml(AICFG.model)}) wählt nach jeder Antwort die wichtigste nächste Frage — wiederholt Schwachstellen, bis sie sitzen. Die gewählte Anzahl ist das Ziel/der harte Stop.${aiAvailable()?'':' <b>API-Key nötig</b> — klicke 🔑 rechts oben.'}</p>
       </div>`;
-    document.getElementById("startBtn").onclick = ()=>startSession(QUESTIONS.map(q=>q.id), true, "full");
-    const sa=document.getElementById("startAi"); if(sa) sa.onclick = ()=>startAiSession();
+    wireCountSelect("heroCount");
+    document.getElementById("startBtn").onclick = ()=>startSession(samplePoolIds(SET.practiceCount), true, "full");
+    const sa=document.getElementById("startAi"); if(sa) sa.onclick = ()=>startAiSession(SET.practiceCount);
     return;
   }
 
@@ -3952,9 +3968,10 @@ function renderOverview(){
       <h3>Weiter üben</h3>
       <div class="chkrow"><input type="checkbox" id="shuffleChk" checked><label for="shuffleChk">Fragen-Reihenfolge zufällig mischen (sonst gleiche Reihenfolge wie zuletzt). Antwortoptionen werden immer gemischt.</label></div>
       <div class="chkrow"><input type="checkbox" id="lenientChk" ${SET.lenient?'checked':''}><label for="lenientChk">Korrektur bei Einfachauswahl erlauben („Schummeln" — nach Sofort-Feedback andere Option wählbar). Aus = streng fixiert (z.B. für Kursteilnehmende).</label></div>
+      <div class="countrow"><label for="menuCount">Anzahl Fragen (Übungsprüfung &amp; KI-Modus):</label> ${countSelectHtml("menuCount")}</div>
       <div class="menucol">
         <button class="btn aibtn" id="mAi" ${aiAvailable()?'':'disabled'}>🤖 KI-adaptiver Modus — GPT wählt die nächste Frage ${aiAvailable()?'':'<span class="cnt">API-Key nötig</span>'}</button>
-        <button class="btn orange" id="mAll">Komplett von vorne — alle Fragen <span class="cnt">${QUESTIONS.length}</span></button>
+        <button class="btn orange" id="mAll">Übungsprüfung starten — <span class="cnt" data-count-label>${SET.practiceCount}</span> Fragen</button>
         <button class="btn primary" id="mN1" ${n1.length?'':'disabled'}>Nur im letzten Durchlauf falsche <span class="cnt">${n1.length}</span></button>
         <button class="btn primary" id="mN2" ${(runs>=2&&n2.length)?'':'disabled'}>In den letzten 2 Durchläufen durchgehend falsche <span class="cnt">${runs>=2?n2.length:'–'}</span></button>
         <button class="btn primary" id="mN3" ${(runs>=3&&n3.length)?'':'disabled'}>In den letzten 3 Durchläufen durchgehend falsche <span class="cnt">${runs>=3?n3.length:'–'}</span></button>
@@ -3975,8 +3992,9 @@ function renderOverview(){
   if(lenChk) lenChk.onchange = ()=>{ SET.lenient = lenChk.checked; saveSettings(); };
   const rnd = ()=>document.getElementById("shuffleChk").checked;
   const go = (ids, mode)=>{ const r=rnd(); startSession(r?ids:orderByLastRun(ids), r, mode); };
-  const mAi=document.getElementById("mAi"); if(mAi && aiAvailable()) mAi.onclick = ()=>startAiSession();
-  document.getElementById("mAll").onclick = ()=>startSession(QUESTIONS.map(q=>q.id), true, "full");
+  wireCountSelect("menuCount");
+  const mAi=document.getElementById("mAi"); if(mAi && aiAvailable()) mAi.onclick = ()=>startAiSession(SET.practiceCount);
+  document.getElementById("mAll").onclick = ()=>startSession(samplePoolIds(SET.practiceCount), true, "full");
   if(n1.length) document.getElementById("mN1").onclick = ()=>go(n1, "wrong1");
   if(runs>=2&&n2.length) document.getElementById("mN2").onclick = ()=>go(n2, "wrong2");
   if(runs>=3&&n3.length) document.getElementById("mN3").onclick = ()=>go(n3, "wrong3");
@@ -4005,7 +4023,29 @@ function escapeAttr(s){ return escapeHtml(s).replace(/"/g,"&quot;"); }
    EINSTELLUNGEN (nicht-sensibel, localStorage)
    ============================================================================ */
 const SET_KEY = "awsclf_settings_v1";
-const SET_DEFAULTS = { lenient:true };
+const SET_DEFAULTS = { lenient:true, practiceCount:100 };
+const PRACTICE_OPTIONS = [10,20,50,100,150,200,260];
+// Zufällige Teilmenge des Fragenpools (für Übungsprüfungen mit gewählter Anzahl).
+function samplePoolIds(n){
+  const all = QUESTIONS.map(q=>q.id);
+  n = Math.max(1, Math.min(Number(n)||all.length, all.length));
+  return shuffle(all).slice(0, n);
+}
+// Wiederverwendbares Dropdown zur Auswahl der Fragen-Anzahl (HTML-String).
+function countSelectHtml(id){
+  const cur = SET.practiceCount||100;
+  const opts = PRACTICE_OPTIONS.map(n=>`<option value="${n}"${n===cur?' selected':''}>${n===QUESTIONS.length?n+' (alle)':n} Fragen</option>`).join("");
+  return `<select id="${id}" class="countsel">${opts}</select>`;
+}
+function wireCountSelect(id){
+  const el=document.getElementById(id); if(!el) return;
+  el.value = String(SET.practiceCount||100);
+  el.onchange = ()=>{ SET.practiceCount = Number(el.value)||100; saveSettings();
+    // andere sichtbare Dropdowns & Button-Labels synchron halten
+    document.querySelectorAll("select.countsel").forEach(s=>{ s.value=el.value; });
+    document.querySelectorAll("[data-count-label]").forEach(b=>{ b.textContent = SET.practiceCount; });
+  };
+}
 function loadSettings(){ try{ return Object.assign({}, SET_DEFAULTS, JSON.parse(localStorage.getItem(SET_KEY))||{}); }catch(e){ return {...SET_DEFAULTS}; } }
 function saveSettings(){ try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} }
 let SET = loadSettings();
@@ -4322,6 +4362,8 @@ Im Kontext bekommst du eine Liste „kandidaten" — konkrete Fragen (Feld „q"
 • Prüfungsgewichte beachten: Security & Compliance 30%, Cloud Technology 34%, Cloud Concepts 24%, Billing 12% — schwache, stark gewichtete Domänen priorisieren.
 • Zuletzt falsche / wiederholt schwache Fragen ruhig WIEDERHOLEN, bis sie sitzen — aber gemeisterte Fragen NICHT endlos drillen (Obergrenze: regeln.max_wiederholungen_pro_frage).
 • Auf Wissenslücken reagieren, nicht stur abarbeiten. Halte Balance aus Wiederholen (Festigen) und Neuem (Abdeckung).
+
+Das Ziel sei, dass der User die Prüfung in wenigen Stunden meistert.
 Antworte JETZT mit genau einem JSON-Objekt.`;
 
 /* ---- Zustands-Helfer (pro Lauf) ---- */
@@ -4493,7 +4535,7 @@ function pickFallbackId(lastId){
 }
 function resolveAiChoice(parsed, lastId){
   const reason = parsed.reason || "";
-  if(parsed.action==="finish" && S.order.length >= AI_MIN_BEFORE_FINISH) return {finish:true, reason};
+  if(parsed.action==="finish" && S.order.length >= Math.min(AI_MIN_BEFORE_FINISH, S.aiTarget)) return {finish:true, reason};
   let id = null;
   if(parsed.id!=null && byId(parsed.id) && !aiCapped(parsed.id)){
     if(!(parsed.id===lastId && parsed.intent!=="retry")) id = parsed.id;  // unmittelbare Zufallswiederholung vermeiden
@@ -4521,11 +4563,12 @@ function presentAiQuestion(id){
   AI.boundId = null;                                        // frischer Tutor-Chat für die (ggf. wiederholte) Frage
   saveSession(); render(); window.scrollTo({top:0,behavior:'smooth'});
 }
-function startAiSession(){
+function startAiSession(count){
   if(!aiAvailable()){ askKey(false); if(!aiAvailable()) return; }
   hideAiWarn(); AI.warnShown=false;
+  const target = Math.max(1, Math.min(Number(count)||SET.practiceCount||100, AI_MAX_PRESENT));
   S = { mode:"ai", aiMode:true, order:[], pos:0, committed:{}, optOrder:{},
-        trail:[], presentCount:{}, lastReason:"", aiBusy:false };
+        trail:[], presentCount:{}, lastReason:"", aiBusy:false, aiTarget:target };
   const seed = pickSeedId();
   if(seed==null){ S=null; return; }
   presentAiQuestion(seed);
@@ -4536,8 +4579,8 @@ async function aiAdvance(){
   renderAiSelecting();
   const lastId = S.order[S.pos];
   let chosen=null, finish=false, commsFail=false;
-  if(S.order.length >= AI_MAX_PRESENT){
-    finish = true;                                  // harte Obergrenze erreicht
+  if(S.order.length >= S.aiTarget || S.order.length >= AI_MAX_PRESENT){
+    finish = true;                                  // Ziel-Anzahl (harter Stop) bzw. Notbremse erreicht
   } else {
     const r = await aiSelectNext();
     if(r.ok){
@@ -4562,10 +4605,10 @@ function finishAiRun(){
 }
 function showAiNextButton(){
   const actions = document.getElementById("actions");
-  const reached = S.order.length >= AI_MAX_PRESENT;
+  const reached = S.order.length >= S.aiTarget || S.order.length >= AI_MAX_PRESENT;
   actions.innerHTML =
     `<button class="btn ghost" id="aiFinishBtn">Beenden &amp; auswerten</button>
-     <button class="btn aibtn" id="aiNextBtn">${reached?'Limit erreicht — auswerten':'Nächste Frage (KI wählt) →'}</button>`;
+     <button class="btn aibtn" id="aiNextBtn">${reached?'Ziel erreicht — auswerten':'Nächste Frage (KI wählt) →'}</button>`;
   document.getElementById("aiFinishBtn").onclick = ()=>finishAiRun();
   document.getElementById("aiNextBtn").onclick = ()=>{ reached ? finishAiRun() : aiAdvance(); };
 }
@@ -4583,7 +4626,7 @@ function hideAiWarn(){ const w=document.getElementById("aiWarn"); if(w) w.style.
 /* ---- boot ---- */
 (function init(){
   const saved = loadSession();
-  if(saved && saved.order && saved.pos < saved.order.length){ S = saved; if(S.aiMode) S.aiBusy=false; }
+  if(saved && saved.order && saved.pos < saved.order.length){ S = saved; if(S.aiMode){ S.aiBusy=false; if(!S.aiTarget) S.aiTarget=SET.practiceCount||100; } }
   else { S = null; }
   wireChat();
   const wc=document.getElementById("aiWarnClose"); if(wc) wc.onclick=hideAiWarn;
