@@ -169,6 +169,25 @@
   .chatcfg .row{display:flex;gap:8px}
   .chatcfg .row > *{flex:1}
 
+  /* one-time API-Warnung unter der KI-Box (rechts unten) */
+  .aiwarn{width:90%;margin:8px 0 0 auto;display:flex;align-items:center;gap:8px;justify-content:space-between;
+    background:#fdecec;border:1px solid #f3c2c2;color:#b21f1f;border-radius:8px;padding:8px 11px;font-size:12.5px;font-weight:600}
+  .aiwarn button{background:none;border:none;color:#b21f1f;font-size:16px;line-height:1;cursor:pointer;padding:0 2px;font-weight:700}
+  .aiwarn button:hover{color:#7d1414}
+
+  /* KI-adaptiv: Badge + "KI wählt"-Indikator */
+  .ai-pick{display:flex;align-items:center;gap:9px;color:var(--blue-d);font-size:13.5px;font-weight:600;margin-top:6px}
+  .ai-pick .dots{display:inline-flex;gap:3px}
+  .ai-pick .dots i{width:6px;height:6px;border-radius:50%;background:var(--blue);display:inline-block;animation:aiblink 1s infinite}
+  .ai-pick .dots i:nth-child(2){animation-delay:.2s} .ai-pick .dots i:nth-child(3){animation-delay:.4s}
+  @keyframes aiblink{0%,100%{opacity:.25}50%{opacity:1}}
+  .badge.aimode{background:#ece7fb;color:#5b3ca8}
+  .ai-reason{font-size:12px;color:var(--muted);margin:8px 0 0;border-left:3px solid #b9a7e8;padding:4px 0 4px 10px;background:#f8f6ff;border-radius:0 6px 6px 0}
+  .btn.aibtn{background:#5b3ca8;color:#fff;border-color:#5b3ca8}
+  .btn.aibtn:hover:not(:disabled){background:#4a2f8c}
+  .menucol .btn.aibtn .cnt{opacity:.9}
+  .ai-hint{font-size:12px;color:var(--muted);margin:2px 0 0}
+
   @media(max-width:1120px){
     .layout{flex-direction:column}
     .quizcol{max-width:none;width:100%}
@@ -201,6 +220,7 @@
         <div class="chathead">
           <span>🤖 KI-Lernassistent <small id="aiModelLbl"></small></span>
           <span class="hbtns">
+            <button id="aiHelpBtn" type="button" title="Hilf mir bitte bei dieser Frage" style="display:none">❓</button>
             <button id="aiKeyBtn" type="button" title="API-Key (nur im Arbeitsspeicher)">🔑</button>
             <button id="aiCfgBtn" type="button" title="Einstellungen / System-Prompt">⚙</button>
           </span>
@@ -212,6 +232,10 @@
           <button class="btn primary" id="chatSend" type="submit">Senden</button>
         </form>
         <div class="chatfoot" id="chatFoot"></div>
+      </div>
+      <div class="aiwarn" id="aiWarn" style="display:none">
+        <span id="aiWarnTxt">Could not communicate with API.</span>
+        <button type="button" id="aiWarnClose" title="Schließen">×</button>
       </div>
     </aside>
   </div>
@@ -2320,6 +2344,1311 @@ const QUESTIONS = [
     ],
     "correct": [0],
     "exp": "Um hohe Verfügbarkeit (High Availability) zu erreichen, müssen Ressourcen stets über mehrere Availability Zones (AZs) verteilt werden. Ein Elastic Load Balancer (ELB) kann den Datenverkehr problemlos auf gesunde Instanzen in verschiedenen AZs verteilen. Wichtig: Ein ELB arbeitet immer nur innerhalb einer *einzigen* AWS-Region.\n\n✔ RICHTIG: \"Launch the instances across multiple Availability Zones in a single AWS Region.\"\n✘ FALSCH: Eine Bereitstellung in nur einer AZ ist nicht hochverfügbar. Ein einzelner ELB kann nicht über mehrere Regionen (Regions) hinweg agieren. Reserved Instances (Option D) beschreiben ein Abrechnungsmodell und sind keine primär architektonische Antwort auf die Frage nach Ausfallsicherheit."
+  },
+  {
+    "id": 161,
+    "domain": "concepts",
+    "q": "A company wants to move from a model of paying for data centers and servers it owns to a model of paying only for the IT resources it consumes. Which benefit of cloud computing does this describe?",
+    "options": [
+      "Trade fixed expense for variable expense",
+      "Benefit from massive economies of scale",
+      "Stop guessing capacity",
+      "Increase speed and agility"
+    ],
+    "correct": [0],
+    "exp": "Eines der sechs Hauptargumente für Cloud Computing lautet \"Trade fixed expense for variable expense\" (Investitionskosten in variable Kosten umwandeln). Statt hoher Vorabinvestitionen (CapEx) in Rechenzentren und Server, ohne zu wissen, wie man sie auslastet, zahlt man nur für die tatsächlich genutzten Ressourcen (OpEx).\n\n✔ RICHTIG: \"Trade fixed expense for variable expense\".\n✘ FALSCH: \"Economies of scale\" bedeutet, dass AWS durch die Bündelung vieler Kunden günstigere Pay-as-you-go-Preise anbietet. \"Stop guessing capacity\" beschreibt das Wegfallen von Kapazitätsschätzungen. \"Increase speed and agility\" bezieht sich auf die schnellere Bereitstellung von Ressourcen."
+  },
+  {
+    "id": 162,
+    "domain": "concepts",
+    "q": "How many pillars are there in the AWS Well-Architected Framework, and which one focuses on minimizing the environmental impact of running cloud workloads?",
+    "options": [
+      "Five pillars; the Reliability pillar",
+      "Six pillars; the Sustainability pillar",
+      "Four pillars; the Performance Efficiency pillar",
+      "Six pillars; the Operational Excellence pillar"
+    ],
+    "correct": [1],
+    "exp": "Das AWS Well-Architected Framework besteht aus sechs Säulen (Pillars): Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization und Sustainability. Die Sustainability-Säule (2021 hinzugefügt) konzentriert sich auf die Minimierung der Umweltauswirkungen beim Betrieb von Cloud-Workloads.\n\n✔ RICHTIG: \"Six pillars; the Sustainability pillar\".\n✘ FALSCH: Es sind nicht mehr nur fünf oder vier Säulen. Operational Excellence betrifft den effizienten Betrieb und die Überwachung, nicht die Nachhaltigkeit."
+  },
+  {
+    "id": 163,
+    "domain": "concepts",
+    "q": "Which perspectives make up the AWS Cloud Adoption Framework (AWS CAF)?",
+    "options": [
+      "Compute, Storage, Database, Networking, Security, Billing",
+      "Business, People, Governance, Platform, Security, Operations",
+      "Operational Excellence, Security, Reliability, Performance, Cost, Sustainability",
+      "Plan, Design, Build, Test, Deploy, Operate"
+    ],
+    "correct": [1],
+    "exp": "Das AWS Cloud Adoption Framework (CAF) gliedert sich in sechs Perspektiven (Perspectives): Business, People und Governance (geschäftliche Fähigkeiten) sowie Platform, Security und Operations (technische Fähigkeiten). Es hilft Organisationen, einen Plan für die Cloud-Migration zu erstellen.\n\n✔ RICHTIG: \"Business, People, Governance, Platform, Security, Operations\".\n✘ FALSCH: Die dritte Option listet die Säulen des Well-Architected Frameworks auf, nicht die CAF-Perspektiven. Die anderen Optionen sind keine definierten CAF-Perspektiven."
+  },
+  {
+    "id": 164,
+    "domain": "concepts",
+    "q": "A company wants to design its workloads so that operations such as deployments and configuration changes are performed using code rather than manual steps. Which Well-Architected Framework pillar does this design principle belong to?",
+    "options": [
+      "Security",
+      "Operational Excellence",
+      "Cost Optimization",
+      "Reliability"
+    ],
+    "correct": [1],
+    "exp": "Das Designprinzip \"Perform operations as code\" (Betrieb als Code durchführen) gehört zur Säule Operational Excellence. Indem die gesamte Infrastruktur und Betriebsabläufe als Code definiert werden, lassen sich menschliche Fehler reduzieren und Vorgänge konsistent wiederholen.\n\n✔ RICHTIG: \"Operational Excellence\".\n✘ FALSCH: Security betrifft den Schutz von Daten und Systemen. Cost Optimization zielt auf das Vermeiden unnötiger Kosten. Reliability fokussiert die Wiederherstellung nach Ausfällen und das korrekte Funktionieren von Workloads."
+  },
+  {
+    "id": 165,
+    "domain": "concepts",
+    "q": "Which of the following is a design principle of the Performance Efficiency pillar of the AWS Well-Architected Framework?",
+    "options": [
+      "Go global in minutes",
+      "Adopt a capital expenditure model",
+      "Restrict all automation",
+      "Keep all infrastructure on premises"
+    ],
+    "correct": [0],
+    "exp": "Die Säule Performance Efficiency umfasst Designprinzipien wie \"Go global in minutes\" (in Minuten global agieren), \"Use serverless architectures\", \"Experiment more often\" und \"Democratize advanced technologies\". Durch das Deployment in mehreren AWS-Regionen lässt sich weltweit niedrige Latenz erzielen.\n\n✔ RICHTIG: \"Go global in minutes\".\n✘ FALSCH: Ein Capital-Expenditure-Modell widerspricht den Cloud-Prinzipien. Automatisierung wird gefördert, nicht eingeschränkt. On-Premises-Betrieb ist kein Designprinzip der Performance Efficiency."
+  },
+  {
+    "id": 166,
+    "domain": "concepts",
+    "q": "A company wants to reduce the environmental footprint of its AWS workloads by selecting efficient instance types and AWS Regions powered by renewable energy. Which Well-Architected pillar guides these decisions?",
+    "options": [
+      "Sustainability",
+      "Cost Optimization",
+      "Reliability",
+      "Security"
+    ],
+    "correct": [0],
+    "exp": "Die Sustainability-Säule (Nachhaltigkeit) hilft, die Umweltauswirkungen von Cloud-Workloads zu verstehen und zu minimieren – etwa durch die Wahl effizienter Instance-Typen, das Rightsizing von Ressourcen und die Auswahl von Regionen mit erneuerbaren Energien.\n\n✔ RICHTIG: \"Sustainability\".\n✘ FALSCH: Cost Optimization senkt zwar oft indirekt den Verbrauch, zielt aber primär auf Kosten. Reliability betrifft Ausfallsicherheit, Security den Schutz von Systemen."
+  },
+  {
+    "id": 167,
+    "domain": "concepts",
+    "q": "A development team can now provision resources in minutes instead of waiting weeks for hardware procurement. Which benefit of the AWS Cloud does this illustrate?",
+    "options": [
+      "Increased agility",
+      "Improved data durability",
+      "Reduced security responsibility",
+      "Guaranteed compliance"
+    ],
+    "correct": [0],
+    "exp": "Agilität (Agility) bedeutet, dass Ressourcen in Minuten statt in Wochen bereitgestellt werden können. Dadurch sinken die Kosten und der Zeitaufwand für Experimente und Entwicklung erheblich, was die Innovationsgeschwindigkeit erhöht.\n\n✔ RICHTIG: \"Increased agility\".\n✘ FALSCH: Datenhaltbarkeit (Durability) bezieht sich auf den Schutz vor Datenverlust. Die Sicherheitsverantwortung verschwindet nicht (Shared Responsibility Model). AWS garantiert keine automatische Compliance – diese liegt teils beim Kunden."
+  },
+  {
+    "id": 168,
+    "domain": "concepts",
+    "q": "Why can AWS offer lower pay-as-you-go prices than most companies could achieve operating their own data centers?",
+    "options": [
+      "Because of economies of scale",
+      "Because AWS does not provide physical security",
+      "Because customers must sign long-term contracts",
+      "Because AWS resells unused on-premises hardware"
+    ],
+    "correct": [0],
+    "exp": "Durch \"Economies of scale\" (Skaleneffekte) kann AWS niedrigere variable Preise anbieten: Da hunderttausende Kunden die Infrastruktur gemeinsam nutzen, erzielt AWS höhere Effizienz und gibt diese Einsparungen in Form von Pay-as-you-go-Preisen weiter.\n\n✔ RICHTIG: \"Because of economies of scale\".\n✘ FALSCH: AWS stellt physische Sicherheit der Rechenzentren bereit. Langfristige Verträge sind nicht erforderlich (Pay-as-you-go). AWS verkauft keine On-Premises-Hardware weiter."
+  },
+  {
+    "id": 169,
+    "domain": "concepts",
+    "q": "A company runs some workloads in its own data center and connects them to applications running in AWS. Which cloud deployment model is the company using?",
+    "options": [
+      "Cloud (all-in)",
+      "Hybrid",
+      "On-premises (private cloud only)",
+      "Multi-Region"
+    ],
+    "correct": [1],
+    "exp": "Beim Hybrid-Deployment-Modell werden cloudbasierte Ressourcen mit der bestehenden On-Premises-Infrastruktur verbunden und integriert. Dies wird häufig während einer Migration oder für Workloads genutzt, die aus Compliance-Gründen lokal bleiben müssen.\n\n✔ RICHTIG: \"Hybrid\".\n✘ FALSCH: Ein reines Cloud-Modell (all-in) hätte keine On-Premises-Komponenten. On-Premises bzw. Private Cloud läuft komplett im eigenen Rechenzentrum. \"Multi-Region\" ist kein Deployment-Modell, sondern eine Verteilungsstrategie innerhalb der Cloud."
+  },
+  {
+    "id": 170,
+    "domain": "concepts",
+    "q": "Which statement best describes the difference between scalability and elasticity in the AWS Cloud?",
+    "options": [
+      "Scalability and elasticity are identical and interchangeable terms",
+      "Scalability is the ability to grow capacity, while elasticity is the ability to automatically add and remove capacity to match demand",
+      "Elasticity only applies to storage, while scalability only applies to compute",
+      "Elasticity requires long-term capacity planning, while scalability does not"
+    ],
+    "correct": [1],
+    "exp": "Skalierbarkeit (Scalability) beschreibt die Fähigkeit, die Kapazität bei steigender Last zu erhöhen. Elastizität (Elasticity) geht weiter: Ressourcen werden automatisch hinzugefügt und wieder entfernt, um sich der tatsächlichen Nachfrage anzupassen – so zahlt man nie für ungenutzte Kapazität.\n\n✔ RICHTIG: \"Scalability is the ability to grow capacity, while elasticity is the ability to automatically add and remove capacity to match demand\".\n✘ FALSCH: Die Begriffe sind nicht identisch. Beide gelten sowohl für Compute als auch Storage. Elastizität benötigt gerade keine langfristige Kapazitätsplanung."
+  },
+  {
+    "id": 171,
+    "domain": "concepts",
+    "q": "Which statement correctly distinguishes high availability from fault tolerance?",
+    "options": [
+      "High availability means a system never fails, while fault tolerance means it fails frequently",
+      "High availability minimizes downtime, while fault tolerance enables a system to keep operating even when components fail",
+      "They are the same concept with different names",
+      "Fault tolerance applies only to billing, while high availability applies only to networking"
+    ],
+    "correct": [1],
+    "exp": "High Availability (Hochverfügbarkeit) zielt darauf ab, Ausfallzeiten so gering wie möglich zu halten (z. B. durch Verteilung über mehrere Availability Zones). Fault Tolerance (Fehlertoleranz) geht weiter: Das System läuft auch dann ununterbrochen weiter, wenn einzelne Komponenten ausfallen, oft durch Redundanz.\n\n✔ RICHTIG: \"High availability minimizes downtime, while fault tolerance enables a system to keep operating even when components fail\".\n✘ FALSCH: Hochverfügbarkeit bedeutet nicht, dass nie etwas ausfällt. Die Begriffe sind nicht identisch und nicht auf einzelne Bereiche wie Billing oder Networking beschränkt."
+  },
+  {
+    "id": 172,
+    "domain": "concepts",
+    "q": "Before moving to AWS, a company often purchased far more server capacity than needed to handle occasional traffic peaks. Which cloud benefit directly addresses this problem?",
+    "options": [
+      "Stop guessing capacity",
+      "Trade variable expense for fixed expense",
+      "Increase time to market for hardware",
+      "Eliminate the shared responsibility model"
+    ],
+    "correct": [0],
+    "exp": "Der Cloud-Vorteil \"Stop guessing capacity\" (keine Kapazitätsschätzungen mehr) löst genau dieses Problem: Statt im Voraus Hardware für Spitzenlasten zu kaufen (Überprovisionierung) oder zu wenig zu haben (Engpässe), skaliert man in der Cloud bedarfsgerecht hoch und runter.\n\n✔ RICHTIG: \"Stop guessing capacity\".\n✘ FALSCH: Die Cloud wandelt fixe in variable Kosten um – nicht umgekehrt. Sie verkürzt die Time-to-Market, statt sie zu verlängern. Das Shared Responsibility Model bleibt bestehen."
+  },
+  {
+    "id": 173,
+    "domain": "concepts",
+    "q": "A company wants to deploy its application closer to users in other countries to reduce latency, with minimal effort. Which benefit of the AWS Cloud enables this?",
+    "options": [
+      "Go global in minutes",
+      "Capital expenditure model",
+      "Manual hardware shipping to each country",
+      "Single Availability Zone deployments"
+    ],
+    "correct": [0],
+    "exp": "Der Vorteil \"Go global in minutes\" ermöglicht es, Anwendungen mit wenigen Klicks in mehreren AWS-Regionen weltweit bereitzustellen. So lassen sich Workloads näher an die Endnutzer bringen, was die Latenz reduziert und die Nutzererfahrung verbessert.\n\n✔ RICHTIG: \"Go global in minutes\".\n✘ FALSCH: Ein Capital-Expenditure-Modell und manueller Hardwareversand widersprechen dem Cloud-Ansatz. Ein Deployment in nur einer Availability Zone verbessert weder globale Reichweite noch Verfügbarkeit."
+  },
+  {
+    "id": 174,
+    "domain": "concepts",
+    "q": "What is the primary purpose of the AWS Cloud Adoption Framework (AWS CAF)?",
+    "options": [
+      "To provide a discount on Amazon EC2 Reserved Instances",
+      "To offer guidance and best practices to help organizations build a comprehensive plan for cloud adoption",
+      "To automatically migrate databases between Regions",
+      "To monitor real-time performance of EC2 instances"
+    ],
+    "correct": [1],
+    "exp": "Das AWS Cloud Adoption Framework (CAF) bietet Leitlinien und Best Practices, um Organisationen bei der Erstellung eines umfassenden Plans für die Cloud-Einführung zu unterstützen. Es organisiert die Anstrengungen in sechs Perspektiven.\n\n✔ RICHTIG: \"To offer guidance and best practices to help organizations build a comprehensive plan for cloud adoption\".\n✘ FALSCH: CAF ist kein Rabattprogramm und kein technisches Migrations- oder Monitoring-Tool (dafür gäbe es z. B. AWS DMS bzw. Amazon CloudWatch)."
+  },
+  {
+    "id": 175,
+    "domain": "concepts",
+    "q": "Which of the following are design principles of the Reliability pillar of the AWS Well-Architected Framework?",
+    "options": [
+      "Automatically recover from failure",
+      "Spend more on fixed capacity upfront",
+      "Test recovery procedures",
+      "Avoid all forms of monitoring",
+      "Manually scale during outages only"
+    ],
+    "correct": [0, 2],
+    "exp": "Die Reliability-Säule umfasst Designprinzipien wie: \"Automatically recover from failure\" (automatische Wiederherstellung anhand von Key Performance Indicators), \"Test recovery procedures\", \"Scale horizontally to increase aggregate workload availability\", \"Stop guessing capacity\" und \"Manage change in automation\".\n\n✔ RICHTIG: \"Automatically recover from failure\" und \"Test recovery procedures\".\n✘ FALSCH: Hohe Vorabinvestitionen, das Vermeiden von Monitoring oder manuelles Skalieren bei Ausfällen widersprechen den Prinzipien der Reliability-Säule."
+  },
+  {
+    "id": 176,
+    "domain": "concepts",
+    "q": "Which AWS tool reviews the state of workloads and compares them to the latest AWS architectural best practices across the six pillars?",
+    "options": [
+      "AWS Well-Architected Tool",
+      "AWS Cost Explorer",
+      "Amazon Inspector",
+      "AWS Config"
+    ],
+    "correct": [0],
+    "exp": "Das AWS Well-Architected Tool ist ein kostenloser Service in der AWS-Konsole, der Workloads anhand der Best Practices der sechs Säulen bewertet. Es stellt Fragen, identifiziert risikoreiche Bereiche und gibt Verbesserungsvorschläge.\n\n✔ RICHTIG: \"AWS Well-Architected Tool\".\n✘ FALSCH: Cost Explorer visualisiert Kosten. Amazon Inspector prüft auf Sicherheitslücken in Workloads. AWS Config bewertet und protokolliert Ressourcenkonfigurationen, vergleicht aber nicht gegen das Well-Architected Framework."
+  },
+  {
+    "id": 177,
+    "domain": "concepts",
+    "q": "A company no longer wants to spend money on running and maintaining data centers and instead wants to focus on its core business of building applications. Which benefit of cloud computing does this represent?",
+    "options": [
+      "Stop spending money running and maintaining data centers",
+      "Increase data center cooling costs",
+      "Trade variable expense for fixed expense",
+      "Buy more physical servers in advance"
+    ],
+    "correct": [0],
+    "exp": "Der Cloud-Vorteil \"Stop spending money running and maintaining data centers\" erlaubt es Unternehmen, sich auf Projekte zu konzentrieren, die ihr Geschäft differenzieren, statt auf das aufwändige Betreiben physischer Infrastruktur (das sogenannte \"undifferentiated heavy lifting\").\n\n✔ RICHTIG: \"Stop spending money running and maintaining data centers\".\n✘ FALSCH: Höhere Kühlkosten, ein Wechsel zu fixen Kosten oder der Vorabkauf von Servern widersprechen den Vorteilen der Cloud."
+  },
+  {
+    "id": 178,
+    "domain": "concepts",
+    "q": "An application is decoupled using a message queue so that a failure in one component does not stop the entire system. Which AWS Cloud design principle does this demonstrate?",
+    "options": [
+      "Loose coupling",
+      "Vertical scaling",
+      "Tight integration of all components",
+      "Single point of failure design"
+    ],
+    "correct": [0],
+    "exp": "\"Loose coupling\" (lose Kopplung) ist ein zentrales Architekturprinzip: Komponenten werden über Mechanismen wie Message Queues (z. B. Amazon SQS) entkoppelt. Fällt eine Komponente aus, bleibt das Gesamtsystem funktionsfähig, da die anderen Teile weiterarbeiten können.\n\n✔ RICHTIG: \"Loose coupling\".\n✘ FALSCH: Vertikales Skalieren betrifft die Größe einzelner Ressourcen. Enge Integration und Single Points of Failure sind genau das, was lose Kopplung vermeiden soll."
+  },
+  {
+    "id": 179,
+    "domain": "concepts",
+    "q": "Which of the following best describes the concept of \"undifferentiated heavy lifting\" that AWS helps customers avoid?",
+    "options": [
+      "Generic IT tasks like racking, stacking, and powering servers that do not differentiate a business",
+      "Writing the application code that makes a business unique",
+      "Designing a company's marketing strategy",
+      "Choosing which AWS Region to deploy in"
+    ],
+    "correct": [0],
+    "exp": "\"Undifferentiated heavy lifting\" bezeichnet generische IT-Aufgaben (z. B. Server montieren, verkabeln, mit Strom versorgen, Rechenzentren betreiben), die keinen Wettbewerbsvorteil bringen. AWS übernimmt diese Aufgaben, damit Kunden sich auf ihr eigentliches Geschäft konzentrieren können.\n\n✔ RICHTIG: \"Generic IT tasks like racking, stacking, and powering servers that do not differentiate a business\".\n✘ FALSCH: Der eigene Anwendungscode, die Marketingstrategie oder die Regionswahl sind keine \"undifferentiated heavy lifting\"-Tätigkeiten."
+  },
+  {
+    "id": 180,
+    "domain": "concepts",
+    "q": "According to AWS pricing fundamentals, which of the following is one of the three core ways AWS pricing works?",
+    "options": [
+      "Pay for what you use",
+      "Pay a flat annual fee regardless of usage",
+      "Pay only after a workload is decommissioned",
+      "Pay more as you reserve less capacity"
+    ],
+    "correct": [0],
+    "exp": "Die drei Grundprinzipien der AWS-Preisgestaltung lauten: \"Pay for what you use\" (nutzungsbasiert zahlen), \"Pay less when you reserve\" (Rabatt bei Reservierung) und \"Pay less with volume-based discounts / as AWS grows\" (Mengenrabatte). Das nutzungsbasierte Modell vermeidet Vorabkosten.\n\n✔ RICHTIG: \"Pay for what you use\".\n✘ FALSCH: Eine pauschale Jahresgebühr unabhängig von der Nutzung widerspricht dem Pay-as-you-go-Modell. Man zahlt während der Nutzung, nicht erst nach Stilllegung. Mehr Reservierung führt zu weniger Kosten, nicht zu mehr."
+  },
+  {
+    "id": 181,
+    "domain": "concepts",
+    "q": "A startup wants to experiment with new ideas at low cost and shut down resources quickly if an experiment fails. Which characteristics of the AWS Cloud make this possible?",
+    "options": [
+      "Agility",
+      "Pay-as-you-go pricing",
+      "Mandatory three-year commitments",
+      "High upfront capital costs",
+      "Fixed, non-scalable capacity"
+    ],
+    "correct": [0, 1],
+    "exp": "Agilität und nutzungsbasierte Preisgestaltung (Pay-as-you-go) ermöglichen kostengünstiges Experimentieren: Ressourcen werden in Minuten bereitgestellt und bei Bedarf wieder abgeschaltet, wobei nur die tatsächliche Nutzung berechnet wird. Fehlversuche verursachen so kaum Kosten.\n\n✔ RICHTIG: \"Agility\" und \"Pay-as-you-go pricing\".\n✘ FALSCH: Verpflichtende Mehrjahresbindungen, hohe Vorabinvestitionen und fixe, nicht skalierbare Kapazität widersprechen dem agilen, experimentierfreundlichen Cloud-Modell."
+  },
+  {
+    "id": 182,
+    "domain": "concepts",
+    "q": "Which pillar of the AWS Well-Architected Framework focuses on the ability of a workload to perform its intended function correctly and consistently, and to recover quickly from failures?",
+    "options": [
+      "Reliability",
+      "Cost Optimization",
+      "Sustainability",
+      "Performance Efficiency"
+    ],
+    "correct": [0],
+    "exp": "Die Reliability-Säule (Zuverlässigkeit) betrifft die Fähigkeit eines Workloads, seine vorgesehene Funktion korrekt und konsistent auszuführen sowie sich schnell von Ausfällen zu erholen. Dazu gehören das Wiederherstellen nach Fehlern und das Verteilen über mehrere Availability Zones.\n\n✔ RICHTIG: \"Reliability\".\n✘ FALSCH: Cost Optimization betrifft Kosten, Sustainability die Umweltwirkung und Performance Efficiency die effiziente Nutzung von Ressourcen für Leistungsanforderungen."
+  },
+  {
+    "id": 183,
+    "domain": "concepts",
+    "q": "A company benefits from lower per-unit AWS prices as its overall usage on the platform increases over time. Which AWS pricing principle does this describe?",
+    "options": [
+      "Pay less by using more (volume-based discounts)",
+      "Trade variable expense for fixed expense",
+      "Pay more for reserved capacity",
+      "Pay a fixed license fee per user"
+    ],
+    "correct": [0],
+    "exp": "Das Prinzip \"Pay less by using more\" beschreibt mengenbasierte Rabatte (Volume-based Discounts): Bei Diensten wie Amazon S3 sinkt der Preis pro Einheit, je mehr genutzt wird. Zudem profitiert man, wenn AWS durch Skaleneffekte wächst und Preise senkt.\n\n✔ RICHTIG: \"Pay less by using more (volume-based discounts)\".\n✘ FALSCH: Die Umwandlung von variablen in fixe Kosten ist das Gegenteil des Cloud-Modells. Reservierungen senken den Preis (zahlen nicht mehr). Eine fixe Lizenzgebühr pro Nutzer ist kein AWS-Preisprinzip."
+  },
+  {
+    "id": 184,
+    "domain": "concepts",
+    "q": "Which of the following is NOT one of the six advantages of cloud computing as defined by AWS?",
+    "options": [
+      "Guaranteed elimination of all security responsibilities for the customer",
+      "Trade fixed expense for variable expense",
+      "Benefit from massive economies of scale",
+      "Go global in minutes"
+    ],
+    "correct": [0],
+    "exp": "Die sechs Vorteile des Cloud Computing nach AWS sind: variable statt fixe Kosten, Skaleneffekte, keine Kapazitätsschätzungen, mehr Geschwindigkeit/Agilität, kein Betrieb eigener Rechenzentren und in Minuten global agieren. Der Wegfall aller Sicherheitsverantwortung gehört NICHT dazu.\n\n✔ RICHTIG (als die NICHT zutreffende Aussage): \"Guaranteed elimination of all security responsibilities for the customer\". Im Shared Responsibility Model behält der Kunde stets Verantwortung für die Sicherheit \"in\" der Cloud.\n✘ FALSCH (da es echte Vorteile sind): variable Kosten, Skaleneffekte und globales Agieren in Minuten."
+  },
+  {
+    "id": 185,
+    "domain": "security",
+    "q": "Which security feature adds an extra layer of protection by requiring users to provide a second piece of information, such as a code from a device, in addition to their password when signing in?",
+    "options": [
+      "Multi-factor authentication (MFA)",
+      "A larger IAM password policy",
+      "Amazon CloudFront",
+      "An Elastic IP address"
+    ],
+    "correct": [0],
+    "exp": "Multi-Factor Authentication (MFA) fügt eine zusätzliche Sicherheitsebene hinzu: Neben dem Passwort (etwas, das man weiß) muss der Nutzer einen Code von einem Gerät oder einer App eingeben (etwas, das man hat). Selbst bei kompromittiertem Passwort bleibt das Konto so geschützt.\n\n✔ RICHTIG: \"Multi-factor authentication (MFA)\".\n✘ FALSCH: Eine strengere Passwortrichtlinie erhöht die Sicherheit, ist aber kein zweiter Faktor. CloudFront ist ein CDN, eine Elastic IP eine statische IP-Adresse – beide haben keinen Bezug zur Anmeldesicherheit."
+  },
+  {
+    "id": 186,
+    "domain": "security",
+    "q": "According to AWS security best practices, how should the AWS account root user be managed?",
+    "options": [
+      "Use the root user for all daily administrative tasks",
+      "Enable MFA on the root user, and avoid using it for everyday tasks",
+      "Share the root user credentials with the whole team",
+      "Create access keys for the root user for automation"
+    ],
+    "correct": [1],
+    "exp": "Der Root-User hat uneingeschränkten Zugriff auf das Konto. Best Practice ist: MFA für den Root-User aktivieren, ihn sicher verwahren und nur für die wenigen Aufgaben nutzen, die ihn zwingend erfordern. Für den Alltag werden IAM-Benutzer/Rollen mit minimalen Rechten verwendet.\n\n✔ RICHTIG: \"Enable MFA on the root user, and avoid using it for everyday tasks\".\n✘ FALSCH: Den Root-User für tägliche Aufgaben zu nutzen, seine Zugangsdaten zu teilen oder Access Keys dafür zu erstellen, sind Sicherheitsrisiken und widersprechen den Best Practices."
+  },
+  {
+    "id": 187,
+    "domain": "security",
+    "q": "Which AWS service makes it easy to create and control the encryption keys used to encrypt data and is integrated with many AWS services?",
+    "options": [
+      "AWS Key Management Service (AWS KMS)",
+      "AWS Trusted Advisor",
+      "Amazon Inspector",
+      "AWS Config"
+    ],
+    "correct": [0],
+    "exp": "AWS Key Management Service (KMS) ermöglicht das Erstellen und Verwalten kryptografischer Schlüssel und steuert deren Nutzung über eine Vielzahl von AWS-Diensten hinweg (z. B. S3, EBS, RDS). Es zentralisiert die Verschlüsselung von Daten.\n\n✔ RICHTIG: \"AWS Key Management Service (AWS KMS)\".\n✘ FALSCH: Trusted Advisor gibt Optimierungsempfehlungen. Amazon Inspector prüft auf Schwachstellen. AWS Config bewertet Ressourcenkonfigurationen – keiner dieser Dienste verwaltet Verschlüsselungsschlüssel."
+  },
+  {
+    "id": 188,
+    "domain": "security",
+    "q": "A company wants to securely store database credentials and automatically rotate them on a schedule without changing application code. Which AWS service should it use?",
+    "options": [
+      "AWS Secrets Manager",
+      "AWS Artifact",
+      "Amazon Macie",
+      "AWS CloudTrail"
+    ],
+    "correct": [0],
+    "exp": "AWS Secrets Manager speichert Geheimnisse wie Datenbank-Zugangsdaten, API-Keys und Tokens sicher und kann diese automatisch nach einem Zeitplan rotieren. Anwendungen rufen die Secrets zur Laufzeit über die API ab, sodass keine Zugangsdaten im Code stehen.\n\n✔ RICHTIG: \"AWS Secrets Manager\".\n✘ FALSCH: AWS Artifact liefert Compliance-Dokumente. Amazon Macie schützt sensible Daten in S3. AWS CloudTrail protokolliert API-Aufrufe zu Audit-Zwecken."
+  },
+  {
+    "id": 189,
+    "domain": "security",
+    "q": "Which AWS service is a threat detection service that continuously monitors for malicious activity and unauthorized behavior using machine learning, anomaly detection, and integrated threat intelligence?",
+    "options": [
+      "Amazon GuardDuty",
+      "AWS WAF",
+      "AWS Shield",
+      "AWS Certificate Manager"
+    ],
+    "correct": [0],
+    "exp": "Amazon GuardDuty ist ein Threat-Detection-Service, der kontinuierlich Konten, Workloads und Daten auf bösartige Aktivitäten überwacht. Er analysiert Quellen wie CloudTrail-, VPC-Flow- und DNS-Logs mithilfe von Machine Learning und Threat Intelligence.\n\n✔ RICHTIG: \"Amazon GuardDuty\".\n✘ FALSCH: AWS WAF ist eine Web Application Firewall. AWS Shield schützt vor DDoS-Angriffen. AWS Certificate Manager verwaltet SSL/TLS-Zertifikate."
+  },
+  {
+    "id": 190,
+    "domain": "security",
+    "q": "A company needs to protect its web applications from common exploits such as SQL injection and cross-site scripting (XSS). Which AWS service should it use?",
+    "options": [
+      "AWS WAF",
+      "Amazon GuardDuty",
+      "AWS KMS",
+      "Amazon Inspector"
+    ],
+    "correct": [0],
+    "exp": "AWS WAF (Web Application Firewall) schützt Webanwendungen vor gängigen Angriffen wie SQL Injection und Cross-Site Scripting (XSS), indem es den HTTP/HTTPS-Traffic filtert. Regeln können selbst definiert oder als Managed Rules von AWS/Partnern bezogen werden.\n\n✔ RICHTIG: \"AWS WAF\".\n✘ FALSCH: GuardDuty erkennt Bedrohungen, blockiert aber keinen Web-Traffic. KMS verwaltet Schlüssel. Amazon Inspector prüft auf Schwachstellen, ist aber keine Firewall."
+  },
+  {
+    "id": 191,
+    "domain": "security",
+    "q": "Which statement about AWS Shield is correct?",
+    "options": [
+      "AWS Shield Standard is automatically enabled for all AWS customers at no additional cost and protects against common DDoS attacks",
+      "AWS Shield only protects against SQL injection attacks",
+      "AWS Shield must be manually purchased before any DDoS protection applies",
+      "AWS Shield is a service for managing encryption keys"
+    ],
+    "correct": [0],
+    "exp": "AWS Shield Standard ist für alle AWS-Kunden ohne zusätzliche Kosten automatisch aktiviert und schützt vor den häufigsten Netzwerk- und Transport-Layer-DDoS-Angriffen. AWS Shield Advanced bietet gegen Aufpreis erweiterten Schutz, ein DDoS Response Team und Kostenschutz.\n\n✔ RICHTIG: \"AWS Shield Standard is automatically enabled for all AWS customers at no additional cost and protects against common DDoS attacks\".\n✘ FALSCH: Shield schützt vor DDoS, nicht vor SQL Injection (das ist WAF). Standard-Schutz ist automatisch aktiv, nicht erst nach Kauf. Shield verwaltet keine Schlüssel."
+  },
+  {
+    "id": 192,
+    "domain": "security",
+    "q": "Which AWS service provides a comprehensive, centralized view of security alerts and security posture across multiple AWS accounts, aggregating findings from services like GuardDuty and Inspector?",
+    "options": [
+      "AWS Security Hub",
+      "Amazon CloudWatch",
+      "AWS Budgets",
+      "Amazon Connect"
+    ],
+    "correct": [0],
+    "exp": "AWS Security Hub bietet eine zentrale, umfassende Übersicht über den Sicherheitsstatus und aggregiert Sicherheitsbefunde aus Diensten wie GuardDuty, Inspector und Macie sowie von Partnerlösungen. Es führt zudem automatisierte Compliance-Checks durch.\n\n✔ RICHTIG: \"AWS Security Hub\".\n✘ FALSCH: CloudWatch überwacht Performance/Metriken. AWS Budgets verwaltet Kostenbudgets. Amazon Connect ist ein Contact-Center-Dienst."
+  },
+  {
+    "id": 193,
+    "domain": "security",
+    "q": "Which AWS service enables a company to assess, audit, and evaluate the configurations of its AWS resources and track configuration changes over time?",
+    "options": [
+      "AWS Config",
+      "AWS CloudTrail",
+      "Amazon Inspector",
+      "AWS Trusted Advisor"
+    ],
+    "correct": [0],
+    "exp": "AWS Config bewertet, auditiert und protokolliert die Konfigurationen von AWS-Ressourcen kontinuierlich. Es zeigt, wie Ressourcen konfiguriert sind, verfolgt Änderungen im Zeitverlauf und kann gegen gewünschte Soll-Zustände (Rules) prüfen.\n\n✔ RICHTIG: \"AWS Config\".\n✘ FALSCH: CloudTrail protokolliert API-Aufrufe (wer hat was getan), nicht den Konfigurationszustand. Inspector prüft Schwachstellen. Trusted Advisor gibt allgemeine Best-Practice-Empfehlungen."
+  },
+  {
+    "id": 194,
+    "domain": "security",
+    "q": "A company uses AWS Organizations and wants to centrally restrict which AWS services member accounts are permitted to use. Which feature should it use?",
+    "options": [
+      "Service control policies (SCPs)",
+      "Security groups",
+      "Amazon CloudWatch alarms",
+      "S3 bucket policies"
+    ],
+    "correct": [0],
+    "exp": "Service Control Policies (SCPs) in AWS Organizations definieren zentrale Leitplanken (Guardrails), die festlegen, welche Aktionen und Dienste in den Mitgliedskonten maximal erlaubt sind. Sie gewähren keine Berechtigungen, sondern begrenzen sie.\n\n✔ RICHTIG: \"Service control policies (SCPs)\".\n✘ FALSCH: Security Groups sind virtuelle Firewalls für Instanzen. CloudWatch-Alarme überwachen Metriken. S3-Bucket-Policies steuern nur den Zugriff auf einzelne Buckets, nicht kontoweite Dienste."
+  },
+  {
+    "id": 195,
+    "domain": "security",
+    "q": "Which AWS service helps centrally manage user access and single sign-on (SSO) to multiple AWS accounts and business applications?",
+    "options": [
+      "AWS IAM Identity Center (AWS Single Sign-On)",
+      "Amazon Inspector",
+      "AWS Shield",
+      "Amazon Macie"
+    ],
+    "correct": [0],
+    "exp": "AWS IAM Identity Center (vormals AWS Single Sign-On) ermöglicht die zentrale Verwaltung des Benutzerzugriffs und Single Sign-On (SSO) über mehrere AWS-Konten und Geschäftsanwendungen hinweg. Es lässt sich mit bestehenden Identitätsquellen wie Active Directory verbinden.\n\n✔ RICHTIG: \"AWS IAM Identity Center (AWS Single Sign-On)\".\n✘ FALSCH: Inspector prüft Schwachstellen, Shield schützt vor DDoS und Macie sichert sensible Daten in S3 – keiner dieser Dienste verwaltet SSO."
+  },
+  {
+    "id": 196,
+    "domain": "security",
+    "q": "What is the difference between encryption at rest and encryption in transit?",
+    "options": [
+      "Encryption at rest protects stored data, while encryption in transit protects data as it moves across networks",
+      "Encryption at rest protects data on networks, while encryption in transit protects stored data",
+      "They both refer only to stored data",
+      "Encryption in transit is only available on premises"
+    ],
+    "correct": [0],
+    "exp": "Encryption at rest schützt gespeicherte Daten (z. B. in S3, EBS oder RDS) durch Verschlüsselung auf dem Speichermedium. Encryption in transit schützt Daten während der Übertragung über Netzwerke, typischerweise mittels SSL/TLS.\n\n✔ RICHTIG: \"Encryption at rest protects stored data, while encryption in transit protects data as it moves across networks\".\n✘ FALSCH: Die Begriffe sind nicht vertauscht und beziehen sich nicht beide nur auf gespeicherte Daten. Encryption in transit ist auch in der AWS Cloud verfügbar, nicht nur On-Premises."
+  },
+  {
+    "id": 197,
+    "domain": "security",
+    "q": "A company has strict regulatory requirements to manage encryption keys on dedicated, single-tenant hardware that it controls. Which AWS service meets this requirement?",
+    "options": [
+      "AWS CloudHSM",
+      "AWS Certificate Manager",
+      "Amazon GuardDuty",
+      "AWS Trusted Advisor"
+    ],
+    "correct": [0],
+    "exp": "AWS CloudHSM stellt dedizierte Hardware Security Modules (HSMs) in der AWS Cloud bereit. Dies erfüllt strenge regulatorische Anforderungen, bei denen Schlüssel auf zertifizierter, single-tenant Hardware unter alleiniger Kontrolle des Kunden verwaltet werden müssen.\n\n✔ RICHTIG: \"AWS CloudHSM\".\n✘ FALSCH: ACM verwaltet SSL/TLS-Zertifikate. GuardDuty erkennt Bedrohungen. Trusted Advisor gibt Empfehlungen – keiner bietet dedizierte HSM-Hardware."
+  },
+  {
+    "id": 198,
+    "domain": "security",
+    "q": "Which AWS service lets you provision, manage, and deploy public and private SSL/TLS certificates for use with AWS services such as Elastic Load Balancing and Amazon CloudFront?",
+    "options": [
+      "AWS Certificate Manager (ACM)",
+      "AWS Secrets Manager",
+      "AWS Key Management Service",
+      "Amazon Cognito"
+    ],
+    "correct": [0],
+    "exp": "AWS Certificate Manager (ACM) ermöglicht das Bereitstellen, Verwalten und Bereitstellen von SSL/TLS-Zertifikaten und automatisiert deren Erneuerung. Die Zertifikate werden mit Diensten wie Elastic Load Balancing, CloudFront und API Gateway genutzt, um Encryption in transit zu aktivieren.\n\n✔ RICHTIG: \"AWS Certificate Manager (ACM)\".\n✘ FALSCH: Secrets Manager speichert Geheimnisse, KMS verwaltet Verschlüsselungsschlüssel, und Amazon Cognito verwaltet App-Benutzeranmeldungen."
+  },
+  {
+    "id": 199,
+    "domain": "security",
+    "q": "Which statement correctly describes the difference between security groups and network ACLs (NACLs) in an Amazon VPC?",
+    "options": [
+      "Security groups are stateful and operate at the instance level, while network ACLs are stateless and operate at the subnet level",
+      "Security groups are stateless and operate at the subnet level, while network ACLs are stateful and operate at the instance level",
+      "Both are stateful and operate only at the Region level",
+      "Both control billing rather than network traffic"
+    ],
+    "correct": [0],
+    "exp": "Security Groups arbeiten auf Instanz-Ebene und sind stateful (Antwortverkehr wird automatisch erlaubt). Network ACLs arbeiten auf Subnetz-Ebene und sind stateless (eingehende und ausgehende Regeln werden getrennt ausgewertet). Beide dienen als Schutzschichten im VPC.\n\n✔ RICHTIG: \"Security groups are stateful and operate at the instance level, while network ACLs are stateless and operate at the subnet level\".\n✘ FALSCH: Die Eigenschaften sind nicht vertauscht. Beide sind nicht auf Regionsebene und steuern Netzwerkverkehr, keine Abrechnung."
+  },
+  {
+    "id": 200,
+    "domain": "security",
+    "q": "A healthcare company needs to download a copy of its AWS Business Associate Addendum (BAA) and compliance reports such as SOC 2. Which AWS service provides on-demand access to these documents?",
+    "options": [
+      "AWS Artifact",
+      "Amazon Inspector",
+      "AWS Config",
+      "AWS Trusted Advisor"
+    ],
+    "correct": [0],
+    "exp": "AWS Artifact ist das zentrale Self-Service-Portal für On-Demand-Zugriff auf AWS-Compliance-Berichte (z. B. SOC, PCI, ISO) sowie auf AWS-Vereinbarungen wie das Business Associate Addendum (BAA) im Rahmen von HIPAA.\n\n✔ RICHTIG: \"AWS Artifact\".\n✘ FALSCH: Inspector prüft Schwachstellen, AWS Config bewertet Konfigurationen und Trusted Advisor gibt Empfehlungen – keiner stellt Compliance-Dokumente oder Verträge bereit."
+  },
+  {
+    "id": 201,
+    "domain": "security",
+    "q": "Under the AWS shared responsibility model, who is responsible for patching the guest operating system on an Amazon EC2 instance?",
+    "options": [
+      "The customer",
+      "AWS",
+      "The AWS Support team only",
+      "It is fully automated and requires no responsibility"
+    ],
+    "correct": [0],
+    "exp": "Bei Amazon EC2 (Infrastructure as a Service) liegt das Patchen des Gastbetriebssystems (Guest OS) und der darauf installierten Anwendungen in der Verantwortung des Kunden (\"Security in the Cloud\"). AWS ist für die zugrunde liegende physische Infrastruktur (Host-OS, Hardware) zuständig.\n\n✔ RICHTIG: \"The customer\".\n✘ FALSCH: AWS patcht nur die ihm zugeordneten Ebenen. Der Support übernimmt dies nicht. Bei EC2 ist Guest-OS-Patching gerade nicht automatisch – anders als bei Managed Services wie Amazon RDS."
+  },
+  {
+    "id": 202,
+    "domain": "security",
+    "q": "Which AWS Trusted Advisor check helps improve security by alerting the customer when multi-factor authentication is not enabled on the root account?",
+    "options": [
+      "A Security category check",
+      "A Cost Optimization category check",
+      "A Performance category check",
+      "A Fault Tolerance category check"
+    ],
+    "correct": [0],
+    "exp": "AWS Trusted Advisor gliedert seine Prüfungen in fünf Kategorien: Cost Optimization, Performance, Security, Fault Tolerance und Service Limits. Die Prüfung, ob MFA für den Root-Account aktiviert ist, gehört zur Kategorie Security.\n\n✔ RICHTIG: \"A Security category check\".\n✘ FALSCH: MFA auf dem Root-Konto ist eine reine Sicherheitsmaßnahme und fällt daher nicht unter Cost Optimization, Performance oder Fault Tolerance."
+  },
+  {
+    "id": 203,
+    "domain": "security",
+    "q": "In an AWS IAM policy written in JSON, which element specifies whether the statement allows or denies access?",
+    "options": [
+      "Effect",
+      "Resource",
+      "Principal",
+      "Version"
+    ],
+    "correct": [0],
+    "exp": "Das \"Effect\"-Element einer IAM-Policy legt fest, ob die Anweisung den Zugriff erlaubt (\"Allow\") oder verweigert (\"Deny\"). Es ist ein Pflichtelement jeder Policy-Statement.\n\n✔ RICHTIG: \"Effect\".\n✘ FALSCH: \"Resource\" gibt die betroffenen ARNs an, \"Principal\" benennt die Entität (in Resource-based Policies) und \"Version\" die Sprachversion der Policy – keines bestimmt Allow/Deny."
+  },
+  {
+    "id": 204,
+    "domain": "security",
+    "q": "A company manages many AWS accounts through AWS Organizations and wants to centrally configure and manage AWS WAF rules and security group policies across all accounts. Which service should it use?",
+    "options": [
+      "AWS Firewall Manager",
+      "Amazon Inspector",
+      "AWS CloudTrail",
+      "AWS Cost Explorer"
+    ],
+    "correct": [0],
+    "exp": "AWS Firewall Manager ermöglicht die zentrale Konfiguration und Verwaltung von Firewall-Regeln (AWS WAF, AWS Shield Advanced, Security Groups, Network Firewall) über mehrere Konten und Ressourcen in AWS Organizations hinweg.\n\n✔ RICHTIG: \"AWS Firewall Manager\".\n✘ FALSCH: Inspector prüft Schwachstellen, CloudTrail protokolliert API-Aktivität und Cost Explorer analysiert Kosten – keiner verwaltet zentral Firewall-Regeln."
+  },
+  {
+    "id": 205,
+    "domain": "security",
+    "q": "A developer needs to add user sign-up, sign-in, and access control to a web and mobile application. Which AWS service provides this functionality?",
+    "options": [
+      "Amazon Cognito",
+      "AWS IAM roles for EC2",
+      "AWS Artifact",
+      "Amazon Macie"
+    ],
+    "correct": [0],
+    "exp": "Amazon Cognito bietet Authentifizierung, Autorisierung und Benutzerverwaltung für Web- und Mobile-Apps. Mit User Pools können sich Endnutzer registrieren und anmelden; Identity Pools gewähren Zugriff auf AWS-Ressourcen.\n\n✔ RICHTIG: \"Amazon Cognito\".\n✘ FALSCH: IAM-Rollen für EC2 betreffen den Anwendungs-/Dienstzugriff, nicht App-Endnutzer. AWS Artifact liefert Compliance-Dokumente und Macie schützt sensible Daten."
+  },
+  {
+    "id": 206,
+    "domain": "security",
+    "q": "Which AWS service provides managed Microsoft Active Directory in the AWS Cloud, allowing directory-aware workloads to use managed Active Directory?",
+    "options": [
+      "AWS Directory Service",
+      "Amazon Cognito",
+      "AWS Secrets Manager",
+      "AWS Config"
+    ],
+    "correct": [0],
+    "exp": "AWS Directory Service (insbesondere AWS Managed Microsoft AD) stellt einen verwalteten Microsoft Active Directory in der AWS Cloud bereit. Directory-fähige Workloads und AWS-Ressourcen können diesen Verzeichnisdienst nutzen, ohne dass der Kunde die Infrastruktur selbst betreibt.\n\n✔ RICHTIG: \"AWS Directory Service\".\n✘ FALSCH: Cognito verwaltet App-Benutzer, Secrets Manager speichert Geheimnisse und AWS Config bewertet Ressourcenkonfigurationen."
+  },
+  {
+    "id": 207,
+    "domain": "security",
+    "q": "Which of the following are customer responsibilities under the AWS shared responsibility model?",
+    "options": [
+      "Configuring security groups and network ACLs",
+      "Managing IAM users, groups, and permissions",
+      "Maintaining the physical security of AWS data centers",
+      "Patching the hypervisor on AWS host servers",
+      "Decommissioning physical storage devices"
+    ],
+    "correct": [0, 1],
+    "exp": "Der Kunde ist verantwortlich für die Sicherheit \"in\" der Cloud: dazu gehören das Konfigurieren von Security Groups und Network ACLs sowie die Verwaltung von IAM-Benutzern, -Gruppen und -Berechtigungen (Identity and Access Management).\n\n✔ RICHTIG: \"Configuring security groups and network ACLs\" und \"Managing IAM users, groups, and permissions\".\n✘ FALSCH: Physische Sicherheit der Rechenzentren, das Patchen des Hypervisors und die Entsorgung physischer Datenträger sind Teil der Sicherheit \"der\" Cloud und liegen bei AWS."
+  },
+  {
+    "id": 208,
+    "domain": "security",
+    "q": "Which AWS service helps customers analyze and investigate the root cause of potential security issues by automatically collecting and correlating log data from sources like GuardDuty and CloudTrail?",
+    "options": [
+      "Amazon Detective",
+      "AWS WAF",
+      "AWS Budgets",
+      "Amazon Polly"
+    ],
+    "correct": [0],
+    "exp": "Amazon Detective sammelt und korreliert automatisch Log-Daten aus Quellen wie GuardDuty, CloudTrail und VPC Flow Logs, um die Ursache potenzieller Sicherheitsprobleme zu analysieren und Untersuchungen zu beschleunigen.\n\n✔ RICHTIG: \"Amazon Detective\".\n✘ FALSCH: AWS WAF filtert Web-Traffic, AWS Budgets verwaltet Kostenbudgets und Amazon Polly wandelt Text in Sprache um."
+  },
+  {
+    "id": 209,
+    "domain": "security",
+    "q": "An organization needs enhanced DDoS protection, access to a 24/7 DDoS Response Team, and protection against DDoS-related usage spikes on its bill. Which AWS offering provides this?",
+    "options": [
+      "AWS Shield Advanced",
+      "AWS Shield Standard",
+      "Amazon Inspector",
+      "AWS Trusted Advisor"
+    ],
+    "correct": [0],
+    "exp": "AWS Shield Advanced bietet gegen Aufpreis erweiterten Schutz vor größeren und komplexeren DDoS-Angriffen, Zugang zum DDoS Response Team (DRT) sowie Cost Protection gegen DDoS-bedingte Skalierungskosten.\n\n✔ RICHTIG: \"AWS Shield Advanced\".\n✘ FALSCH: Shield Standard ist kostenlos, bietet aber keinen DRT-Zugang oder Kostenschutz. Inspector prüft Schwachstellen und Trusted Advisor gibt allgemeine Empfehlungen."
+  },
+  {
+    "id": 210,
+    "domain": "security",
+    "q": "Which IAM feature generates a report that lists all IAM users in an account and the status of their credentials, such as passwords, access keys, and MFA devices?",
+    "options": [
+      "IAM credential report",
+      "AWS Cost and Usage Report",
+      "Amazon CloudWatch dashboard",
+      "AWS Artifact report"
+    ],
+    "correct": [0],
+    "exp": "Der IAM Credential Report ist eine herunterladbare CSV-Datei, die alle IAM-Benutzer eines Kontos und den Status ihrer Anmeldeinformationen auflistet (Passwörter, Access Keys, MFA-Status, Rotation). Er hilft bei Sicherheits- und Compliance-Audits.\n\n✔ RICHTIG: \"IAM credential report\".\n✘ FALSCH: Der Cost and Usage Report betrifft Kosten, ein CloudWatch-Dashboard zeigt Metriken und AWS-Artifact-Berichte sind Compliance-Dokumente."
+  },
+  {
+    "id": 211,
+    "domain": "security",
+    "q": "A company wants to apply the principle of least privilege when granting permissions to a new IAM user. Which approach best follows this principle?",
+    "options": [
+      "Grant only the specific permissions required to perform the user's tasks, and add more only if needed",
+      "Grant full administrator access to avoid permission errors",
+      "Attach all available AWS managed policies to the user",
+      "Share an existing administrator user's credentials"
+    ],
+    "correct": [0],
+    "exp": "Das Prinzip der minimalen Rechtevergabe (Principle of Least Privilege) besagt, dass nur genau die Berechtigungen erteilt werden, die zur Erfüllung der jeweiligen Aufgaben nötig sind. Weitere Rechte werden nur bei nachgewiesenem Bedarf ergänzt.\n\n✔ RICHTIG: \"Grant only the specific permissions required to perform the user's tasks, and add more only if needed\".\n✘ FALSCH: Vollzugriff zu vergeben, alle Policies anzuhängen oder Zugangsdaten zu teilen, widerspricht dem Least-Privilege-Prinzip und erhöht das Sicherheitsrisiko."
+  },
+  {
+    "id": 212,
+    "domain": "security",
+    "q": "When using AWS KMS with customer managed keys, who controls the rotation and access policies of those encryption keys?",
+    "options": [
+      "The customer",
+      "AWS exclusively",
+      "The AWS Support team",
+      "Any AWS account by default"
+    ],
+    "correct": [0],
+    "exp": "Bei Customer Managed Keys in AWS KMS behält der Kunde die Kontrolle: Er definiert Key Policies, steuert den Zugriff (wer welche Schlüssel nutzen darf) und konfiguriert die Schlüsselrotation. AWS verwaltet die zugrunde liegende sichere Infrastruktur.\n\n✔ RICHTIG: \"The customer\".\n✘ FALSCH: AWS allein, der Support oder beliebige Konten kontrollieren diese Schlüssel nicht – der Zugriff ist durch Key Policies streng eingeschränkt."
+  },
+  {
+    "id": 213,
+    "domain": "security",
+    "q": "Which statement about penetration testing on AWS is correct?",
+    "options": [
+      "Customers are permitted to perform penetration testing against a set of approved AWS services on their own resources without prior approval",
+      "Penetration testing is never allowed on AWS under any circumstances",
+      "Customers may freely test other customers' resources",
+      "Penetration testing requires purchasing AWS Shield Advanced first"
+    ],
+    "correct": [0],
+    "exp": "AWS erlaubt Kunden, ohne Vorabgenehmigung Penetrationstests gegen eine Liste freigegebener Dienste (z. B. EC2, RDS, CloudFront, API Gateway) auf den EIGENEN Ressourcen durchzuführen. Bestimmte disruptive Tests (z. B. DDoS-Simulationen) erfordern weiterhin eine gesonderte Abstimmung.\n\n✔ RICHTIG: \"Customers are permitted to perform penetration testing against a set of approved AWS services on their own resources without prior approval\".\n✘ FALSCH: Pentests sind nicht generell verboten, dürfen aber nie fremde Ressourcen betreffen und setzen kein Shield Advanced voraus."
+  },
+  {
+    "id": 214,
+    "domain": "security",
+    "q": "A company wants to automatically discover and classify sensitive data, such as personally identifiable information (PII), stored in its Amazon S3 buckets. Which AWS service should it use?",
+    "options": [
+      "Amazon Macie",
+      "Amazon GuardDuty",
+      "AWS Shield",
+      "AWS Certificate Manager"
+    ],
+    "correct": [0],
+    "exp": "Amazon Macie nutzt Machine Learning und Pattern Matching, um sensible Daten wie personenbezogene Informationen (PII) in Amazon S3 automatisch zu erkennen, zu klassifizieren und zu schützen. Es liefert Dashboards und Alarme zu gefundenen sensiblen Daten.\n\n✔ RICHTIG: \"Amazon Macie\".\n✘ FALSCH: GuardDuty erkennt Bedrohungen über Logs, Shield schützt vor DDoS und ACM verwaltet Zertifikate – keiner klassifiziert sensible Daten in S3."
+  },
+  {
+    "id": 215,
+    "domain": "technology",
+    "q": "A workload requires a large amount of RAM relative to vCPU to run an in-memory database. Which Amazon EC2 instance type family is the best fit?",
+    "options": [
+      "Memory optimized",
+      "Compute optimized",
+      "Storage optimized",
+      "General purpose"
+    ],
+    "correct": [0],
+    "exp": "Amazon EC2 bietet verschiedene Instance-Familien für unterschiedliche Workloads. Memory-optimized-Instanzen (z. B. R-Familie) sind für Workloads ausgelegt, die große Datenmengen im Arbeitsspeicher verarbeiten, etwa In-Memory-Datenbanken oder Echtzeit-Big-Data-Analysen.\n\n✔ RICHTIG: \"Memory optimized\".\n✘ FALSCH: Compute-optimized (C-Familie) eignet sich für rechenintensive Aufgaben. Storage-optimized (z. B. I-Familie) für hohe sequenzielle Lese-/Schreibzugriffe. General-purpose (z. B. M-/T-Familie) bietet ein ausgewogenes Verhältnis von Compute, Memory und Netzwerk."
+  },
+  {
+    "id": 216,
+    "domain": "technology",
+    "q": "A company wants to run and manage Docker containers on AWS but does not want to provision or manage the underlying servers. Which combination of services is most appropriate?",
+    "options": [
+      "Amazon ECS or Amazon EKS with AWS Fargate",
+      "Amazon EC2 with manually installed Docker only",
+      "Amazon S3 with AWS Lambda",
+      "Amazon RDS with Amazon Redshift"
+    ],
+    "correct": [0],
+    "exp": "AWS Fargate ist eine serverlose Compute-Engine für Container, die mit Amazon ECS und Amazon EKS funktioniert. Damit lassen sich Container ausführen, ohne EC2-Instanzen bereitzustellen oder zu verwalten – AWS übernimmt die zugrunde liegende Infrastruktur.\n\n✔ RICHTIG: \"Amazon ECS or Amazon EKS with AWS Fargate\".\n✘ FALSCH: EC2 mit manuell installiertem Docker erfordert Serververwaltung. S3+Lambda und RDS+Redshift sind keine Container-Orchestrierungslösungen."
+  },
+  {
+    "id": 217,
+    "domain": "technology",
+    "q": "Which AWS service is a fully managed Kubernetes service that lets a company run Kubernetes on AWS without installing and operating its own Kubernetes control plane?",
+    "options": [
+      "Amazon Elastic Kubernetes Service (Amazon EKS)",
+      "Amazon Elastic Container Registry (Amazon ECR)",
+      "AWS Lambda",
+      "Amazon Lightsail"
+    ],
+    "correct": [0],
+    "exp": "Amazon Elastic Kubernetes Service (EKS) ist ein verwalteter Kubernetes-Dienst. AWS betreibt die hochverfügbare Kubernetes-Control-Plane, sodass Kunden Kubernetes nutzen können, ohne sie selbst installieren und warten zu müssen.\n\n✔ RICHTIG: \"Amazon Elastic Kubernetes Service (Amazon EKS)\".\n✘ FALSCH: Amazon ECR ist eine Container-Image-Registry. AWS Lambda führt Funktionscode aus. Amazon Lightsail bietet einfache virtuelle Server, aber kein verwaltetes Kubernetes."
+  },
+  {
+    "id": 218,
+    "domain": "technology",
+    "q": "A developer wants to deploy a web application by simply uploading code, while AWS automatically handles capacity provisioning, load balancing, and scaling. Which service should be used?",
+    "options": [
+      "AWS Elastic Beanstalk",
+      "Amazon EC2",
+      "AWS CloudFormation",
+      "Amazon VPC"
+    ],
+    "correct": [0],
+    "exp": "AWS Elastic Beanstalk ist ein Platform-as-a-Service (PaaS): Man lädt nur den Anwendungscode hoch, und Elastic Beanstalk übernimmt automatisch Bereitstellung der Kapazität, Load Balancing, Auto Scaling und Monitoring. Man behält dabei volle Kontrolle über die zugrunde liegenden Ressourcen.\n\n✔ RICHTIG: \"AWS Elastic Beanstalk\".\n✘ FALSCH: Reines EC2 erfordert manuelle Einrichtung. CloudFormation provisioniert Infrastruktur als Code, deployt aber nicht automatisch Anwendungen wie Beanstalk. VPC ist ein Netzwerkdienst."
+  },
+  {
+    "id": 219,
+    "domain": "technology",
+    "q": "A small business wants the easiest way to launch and manage a simple virtual private server with a predictable monthly price, including a static IP and basic networking. Which AWS service is designed for this?",
+    "options": [
+      "Amazon Lightsail",
+      "Amazon EC2 Spot Instances",
+      "AWS Batch",
+      "Amazon EMR"
+    ],
+    "correct": [0],
+    "exp": "Amazon Lightsail bietet einen einfachen Einstieg in die Cloud mit vorkonfigurierten virtuellen Servern, Storage, Datenbanken und Networking zu einem vorhersehbaren monatlichen Festpreis. Ideal für einfache Web-Apps, Blogs und kleine Workloads.\n\n✔ RICHTIG: \"Amazon Lightsail\".\n✘ FALSCH: EC2 Spot Instances dienen kostengünstigen, unterbrechbaren Workloads. AWS Batch führt Batch-Computing-Jobs aus. Amazon EMR verarbeitet Big Data mit Frameworks wie Apache Spark/Hadoop."
+  },
+  {
+    "id": 220,
+    "domain": "technology",
+    "q": "Which AWS feature automatically adjusts the number of Amazon EC2 instances in a group to maintain performance and meet demand at the lowest possible cost?",
+    "options": [
+      "Amazon EC2 Auto Scaling",
+      "Amazon CloudFront",
+      "AWS Direct Connect",
+      "Amazon Route 53"
+    ],
+    "correct": [0],
+    "exp": "Amazon EC2 Auto Scaling fügt automatisch EC2-Instanzen hinzu oder entfernt sie, basierend auf definierten Bedingungen (z. B. CPU-Auslastung). So bleibt die Anwendung leistungsfähig bei Lastspitzen und kosteneffizient bei geringer Last.\n\n✔ RICHTIG: \"Amazon EC2 Auto Scaling\".\n✘ FALSCH: CloudFront ist ein CDN, Direct Connect eine dedizierte Netzwerkverbindung und Route 53 ein DNS-Dienst – keiner skaliert EC2-Kapazität automatisch."
+  },
+  {
+    "id": 221,
+    "domain": "technology",
+    "q": "A company has data with unknown or changing access patterns and wants to automatically optimize storage costs without performance impact or operational overhead. Which Amazon S3 storage class should it use?",
+    "options": [
+      "S3 Intelligent-Tiering",
+      "S3 Standard",
+      "S3 Glacier Deep Archive",
+      "S3 One Zone-Infrequent Access"
+    ],
+    "correct": [0],
+    "exp": "S3 Intelligent-Tiering verschiebt Objekte automatisch zwischen Zugriffsebenen (häufig/selten/Archiv), basierend auf den tatsächlichen Zugriffsmustern. Das optimiert die Kosten bei unbekannten oder sich ändernden Zugriffsmustern, ohne Performance-Einbußen oder manuellen Aufwand.\n\n✔ RICHTIG: \"S3 Intelligent-Tiering\".\n✘ FALSCH: S3 Standard ist für häufigen Zugriff (keine automatische Optimierung). Glacier Deep Archive ist für selten benötigte Langzeitarchive. One Zone-IA speichert in nur einer AZ und eignet sich für reproduzierbare, selten genutzte Daten."
+  },
+  {
+    "id": 222,
+    "domain": "technology",
+    "q": "A company needs to archive data that is rarely accessed and can tolerate retrieval times of up to 12 hours, at the lowest possible storage cost. Which Amazon S3 storage class is most appropriate?",
+    "options": [
+      "S3 Glacier Deep Archive",
+      "S3 Standard",
+      "S3 Standard-Infrequent Access",
+      "S3 Intelligent-Tiering"
+    ],
+    "correct": [0],
+    "exp": "S3 Glacier Deep Archive ist die kostengünstigste S3-Speicherklasse, ausgelegt für die Langzeitarchivierung von Daten, die nur sehr selten benötigt werden (z. B. Compliance-Archive). Abrufzeiten liegen typischerweise im Bereich von Stunden.\n\n✔ RICHTIG: \"S3 Glacier Deep Archive\".\n✘ FALSCH: S3 Standard und Standard-IA sind für häufigeren bzw. selteneren, aber sofortigen Zugriff gedacht und teurer pro GB. Intelligent-Tiering optimiert automatisch, ist aber nicht die günstigste reine Archivklasse."
+  },
+  {
+    "id": 223,
+    "domain": "technology",
+    "q": "Multiple Amazon EC2 Linux instances need to access the same file system concurrently with shared access. Which AWS storage service should be used?",
+    "options": [
+      "Amazon Elastic File System (Amazon EFS)",
+      "Amazon Elastic Block Store (Amazon EBS)",
+      "Amazon S3 Glacier",
+      "Amazon EC2 instance store"
+    ],
+    "correct": [0],
+    "exp": "Amazon EFS ist ein vollständig verwaltetes, elastisches NFS-Dateisystem, das gleichzeitig von vielen Linux-EC2-Instanzen (und On-Premises-Servern) gemeinsam genutzt werden kann. Es skaliert automatisch mit der Datenmenge.\n\n✔ RICHTIG: \"Amazon Elastic File System (Amazon EFS)\".\n✘ FALSCH: Ein EBS-Volume ist standardmäßig nur an eine Instanz angehängt (Block Storage). S3 Glacier ist Archivspeicher. Der EC2 Instance Store ist flüchtiger, instanzgebundener Speicher."
+  },
+  {
+    "id": 224,
+    "domain": "technology",
+    "q": "A company is migrating a Windows-based application that requires a fully managed native Windows file system supporting the SMB protocol. Which AWS service meets this requirement?",
+    "options": [
+      "Amazon FSx for Windows File Server",
+      "Amazon EFS",
+      "Amazon S3",
+      "Amazon EBS"
+    ],
+    "correct": [0],
+    "exp": "Amazon FSx for Windows File Server bietet vollständig verwalteten, nativen Windows-Dateispeicher mit Unterstützung für das SMB-Protokoll und die Integration mit Active Directory. Ideal für Windows-basierte Anwendungen.\n\n✔ RICHTIG: \"Amazon FSx for Windows File Server\".\n✘ FALSCH: Amazon EFS nutzt NFS (Linux). Amazon S3 ist Objektspeicher (kein Dateisystem). Amazon EBS ist Block Storage für einzelne Instanzen."
+  },
+  {
+    "id": 225,
+    "domain": "technology",
+    "q": "A company needs to transfer petabytes of data to AWS, but its internet connection is too slow to do so in a reasonable time. Which AWS service is designed for this large-scale offline data transfer?",
+    "options": [
+      "AWS Snowball / AWS Snow Family",
+      "Amazon CloudFront",
+      "AWS Direct Connect only",
+      "Amazon S3 Transfer Acceleration only"
+    ],
+    "correct": [0],
+    "exp": "Die AWS Snow Family (z. B. AWS Snowball) bietet physische Geräte, mit denen sehr große Datenmengen offline zu AWS transportiert werden können, wenn Netzwerkübertragungen zu langsam oder teuer wären. Die Daten werden auf das Gerät geladen und zurück zu AWS versendet.\n\n✔ RICHTIG: \"AWS Snowball / AWS Snow Family\".\n✘ FALSCH: CloudFront ist ein CDN. Direct Connect und S3 Transfer Acceleration beschleunigen Online-Übertragungen, lösen aber das Problem bei Petabytes über eine langsame Leitung nicht so effizient wie ein physischer Transport."
+  },
+  {
+    "id": 226,
+    "domain": "technology",
+    "q": "Which AWS database service is a MySQL- and PostgreSQL-compatible relational database built for the cloud, offering higher performance and availability than standard community databases?",
+    "options": [
+      "Amazon Aurora",
+      "Amazon DynamoDB",
+      "Amazon Redshift",
+      "Amazon ElastiCache"
+    ],
+    "correct": [0],
+    "exp": "Amazon Aurora ist eine cloud-native, MySQL- und PostgreSQL-kompatible relationale Datenbank. Sie bietet deutlich höhere Performance und Verfügbarkeit als die Standard-Community-Versionen und ist Teil von Amazon RDS.\n\n✔ RICHTIG: \"Amazon Aurora\".\n✘ FALSCH: DynamoDB ist eine NoSQL-Datenbank. Redshift ist ein Data Warehouse für Analysen. ElastiCache ist ein In-Memory-Cache (Redis/Memcached)."
+  },
+  {
+    "id": 227,
+    "domain": "technology",
+    "q": "Which AWS service is a fully managed, petabyte-scale data warehouse designed for running complex analytic queries against large datasets?",
+    "options": [
+      "Amazon Redshift",
+      "Amazon RDS",
+      "Amazon DynamoDB",
+      "Amazon ElastiCache"
+    ],
+    "correct": [0],
+    "exp": "Amazon Redshift ist ein vollständig verwaltetes Data Warehouse im Petabyte-Bereich, optimiert für komplexe analytische Abfragen (OLAP) über große, strukturierte Datenmengen mittels SQL.\n\n✔ RICHTIG: \"Amazon Redshift\".\n✘ FALSCH: Amazon RDS ist für transaktionale relationale Datenbanken (OLTP). DynamoDB ist eine NoSQL-Key-Value-Datenbank. ElastiCache beschleunigt Anwendungen durch In-Memory-Caching."
+  },
+  {
+    "id": 228,
+    "domain": "technology",
+    "q": "An application repeatedly reads the same data from a database, causing high latency. Which AWS service can store this frequently accessed data in memory to improve read performance?",
+    "options": [
+      "Amazon ElastiCache",
+      "Amazon S3 Glacier",
+      "AWS Snowball",
+      "Amazon Athena"
+    ],
+    "correct": [0],
+    "exp": "Amazon ElastiCache bietet verwaltete In-Memory-Datenspeicher (Redis oder Memcached). Häufig gelesene Daten werden im Arbeitsspeicher zwischengespeichert, was die Latenz drastisch senkt und die Datenbank entlastet.\n\n✔ RICHTIG: \"Amazon ElastiCache\".\n✘ FALSCH: S3 Glacier ist Archivspeicher, Snowball dient dem Datentransport und Athena führt SQL-Abfragen auf S3 aus – keiner ist ein In-Memory-Cache."
+  },
+  {
+    "id": 229,
+    "domain": "technology",
+    "q": "A company wants to connect thousands of VPCs and on-premises networks together through a single, central gateway to simplify its network architecture. Which AWS service should it use?",
+    "options": [
+      "AWS Transit Gateway",
+      "Amazon Route 53",
+      "Amazon CloudFront",
+      "AWS Certificate Manager"
+    ],
+    "correct": [0],
+    "exp": "AWS Transit Gateway fungiert als zentraler Knotenpunkt (\"Cloud-Router\"), der zahlreiche VPCs und On-Premises-Netzwerke miteinander verbindet. Das vereinfacht die Netzwerkarchitektur gegenüber vielen einzelnen Peering-Verbindungen erheblich.\n\n✔ RICHTIG: \"AWS Transit Gateway\".\n✘ FALSCH: Route 53 ist DNS, CloudFront ein CDN und ACM ein Zertifikatsdienst – keiner verbindet zentral viele Netzwerke."
+  },
+  {
+    "id": 230,
+    "domain": "technology",
+    "q": "A company wants instances in a private subnet to access AWS services like Amazon S3 without sending traffic over the public internet. Which feature provides this private connectivity?",
+    "options": [
+      "VPC endpoints (AWS PrivateLink)",
+      "An internet gateway",
+      "An Elastic IP address",
+      "Amazon CloudFront"
+    ],
+    "correct": [0],
+    "exp": "VPC Endpoints (auf Basis von AWS PrivateLink) ermöglichen den privaten Zugriff von Ressourcen in einem VPC auf AWS-Dienste wie Amazon S3, ohne dass der Traffic das öffentliche Internet durchläuft. Das erhöht Sicherheit und reduziert Datenausgangskosten.\n\n✔ RICHTIG: \"VPC endpoints (AWS PrivateLink)\".\n✘ FALSCH: Ein Internet Gateway leitet Traffic ins öffentliche Internet. Eine Elastic IP ist eine statische öffentliche IP. CloudFront ist ein CDN."
+  },
+  {
+    "id": 231,
+    "domain": "technology",
+    "q": "Which Elastic Load Balancing type is best suited for routing HTTP and HTTPS traffic and provides advanced request routing based on the content of the request?",
+    "options": [
+      "Application Load Balancer (ALB)",
+      "Network Load Balancer (NLB)",
+      "Gateway Load Balancer (GWLB)",
+      "Classic Load Balancer only for HTTP/2"
+    ],
+    "correct": [0],
+    "exp": "Der Application Load Balancer (ALB) arbeitet auf Layer 7 (HTTP/HTTPS) und bietet erweitertes, inhaltsbasiertes Routing (z. B. nach Pfad oder Host-Header). Ideal für moderne Web- und Microservice-Anwendungen.\n\n✔ RICHTIG: \"Application Load Balancer (ALB)\".\n✘ FALSCH: Der Network Load Balancer (Layer 4) ist für extreme Performance/TCP/UDP optimiert. Der Gateway Load Balancer dient dem Einbinden von Netzwerk-Appliances. Der Classic Load Balancer ist die ältere Generation ohne fortgeschrittenes Content-Routing."
+  },
+  {
+    "id": 232,
+    "domain": "technology",
+    "q": "Which Amazon Route 53 capability helps direct users to the AWS Region that provides the lowest latency for them?",
+    "options": [
+      "Latency-based routing policy",
+      "Simple routing policy",
+      "An S3 bucket policy",
+      "A security group rule"
+    ],
+    "correct": [0],
+    "exp": "Amazon Route 53 ist ein DNS-Dienst mit verschiedenen Routing-Policies. Die Latency-based Routing Policy leitet Nutzer automatisch zu der AWS-Region, die ihnen die geringste Latenz bietet, was die Anwendungsperformance verbessert.\n\n✔ RICHTIG: \"Latency-based routing policy\".\n✘ FALSCH: Die Simple Routing Policy berücksichtigt keine Latenz. Eine S3-Bucket-Policy steuert Zugriff auf Buckets und eine Security-Group-Regel filtert Netzwerkverkehr – beide haben nichts mit DNS-Routing zu tun."
+  },
+  {
+    "id": 233,
+    "domain": "technology",
+    "q": "Which AWS service allows you to run interactive SQL queries directly against data stored in Amazon S3 without setting up servers or loading the data into a database?",
+    "options": [
+      "Amazon Athena",
+      "Amazon Redshift",
+      "Amazon RDS",
+      "Amazon EMR"
+    ],
+    "correct": [0],
+    "exp": "Amazon Athena ist ein serverloser, interaktiver Abfragedienst, mit dem sich Daten direkt in Amazon S3 per Standard-SQL analysieren lassen. Es ist keine Infrastruktur einzurichten, und man zahlt nur pro gescannter Datenmenge.\n\n✔ RICHTIG: \"Amazon Athena\".\n✘ FALSCH: Redshift erfordert das Laden der Daten in ein Data Warehouse. RDS ist eine relationale Datenbank. Amazon EMR betreibt Big-Data-Frameworks (Spark/Hadoop) auf Clustern."
+  },
+  {
+    "id": 234,
+    "domain": "technology",
+    "q": "Which AWS service is a fully managed business intelligence (BI) service used to build interactive dashboards and visualizations from various data sources?",
+    "options": [
+      "Amazon QuickSight",
+      "Amazon Kinesis",
+      "AWS Glue",
+      "Amazon Comprehend"
+    ],
+    "correct": [0],
+    "exp": "Amazon QuickSight ist ein cloudbasierter Business-Intelligence-Dienst, mit dem sich interaktive Dashboards und Visualisierungen aus zahlreichen Datenquellen erstellen und teilen lassen.\n\n✔ RICHTIG: \"Amazon QuickSight\".\n✘ FALSCH: Amazon Kinesis verarbeitet Echtzeit-Streaming-Daten. AWS Glue ist ein ETL-Dienst. Amazon Comprehend ist ein NLP-Dienst zur Textanalyse."
+  },
+  {
+    "id": 235,
+    "domain": "technology",
+    "q": "A company needs to collect, process, and analyze streaming data such as application logs and clickstreams in real time. Which AWS service is designed for this?",
+    "options": [
+      "Amazon Kinesis",
+      "Amazon S3 Glacier",
+      "AWS Snowmobile",
+      "Amazon RDS"
+    ],
+    "correct": [0],
+    "exp": "Amazon Kinesis ist für das Erfassen, Verarbeiten und Analysieren von Echtzeit-Streaming-Daten konzipiert (z. B. Logs, Clickstreams, IoT-Telemetrie, Video). So lassen sich zeitnah Erkenntnisse aus kontinuierlich eintreffenden Daten gewinnen.\n\n✔ RICHTIG: \"Amazon Kinesis\".\n✘ FALSCH: S3 Glacier ist Archivspeicher, Snowmobile ein Exabyte-Datentransport-LKW und RDS eine relationale Datenbank – keiner ist für Echtzeit-Streaming ausgelegt."
+  },
+  {
+    "id": 236,
+    "domain": "technology",
+    "q": "Which AWS service is a serverless extract, transform, and load (ETL) service that makes it easy to prepare and load data for analytics?",
+    "options": [
+      "AWS Glue",
+      "Amazon Athena",
+      "Amazon QuickSight",
+      "Amazon Inspector"
+    ],
+    "correct": [0],
+    "exp": "AWS Glue ist ein serverloser ETL-Dienst (Extract, Transform, Load), der das Erkennen, Aufbereiten, Zusammenführen und Laden von Daten für Analysen vereinfacht. Es enthält u. a. einen Data Catalog.\n\n✔ RICHTIG: \"AWS Glue\".\n✘ FALSCH: Athena fragt Daten in S3 per SQL ab. QuickSight erstellt Dashboards. Amazon Inspector prüft auf Sicherheitslücken."
+  },
+  {
+    "id": 237,
+    "domain": "technology",
+    "q": "Which AWS service enables data scientists and developers to build, train, and deploy machine learning models at scale?",
+    "options": [
+      "Amazon SageMaker",
+      "Amazon Rekognition",
+      "Amazon Polly",
+      "Amazon Translate"
+    ],
+    "correct": [0],
+    "exp": "Amazon SageMaker ist eine vollständig verwaltete Plattform, die den gesamten Machine-Learning-Workflow abdeckt: Daten aufbereiten, Modelle erstellen, trainieren, optimieren und in Produktion bereitstellen.\n\n✔ RICHTIG: \"Amazon SageMaker\".\n✘ FALSCH: Rekognition (Bild/Video), Polly (Text-to-Speech) und Translate (Übersetzung) sind vortrainierte, anwendungsspezifische KI-Dienste, keine Plattform zum Erstellen eigener ML-Modelle."
+  },
+  {
+    "id": 238,
+    "domain": "technology",
+    "q": "A company wants to decouple a web tier from a backend processing tier using a fully managed message queue so components can scale independently. Which AWS service should it use?",
+    "options": [
+      "Amazon Simple Queue Service (Amazon SQS)",
+      "Amazon Simple Notification Service (Amazon SNS)",
+      "Amazon CloudFront",
+      "AWS Direct Connect"
+    ],
+    "correct": [0],
+    "exp": "Amazon SQS ist ein vollständig verwalteter Message-Queue-Dienst zum Entkoppeln von Anwendungskomponenten. Nachrichten werden in einer Queue gepuffert, sodass Sender und Empfänger unabhängig voneinander skalieren und Lastspitzen abfedern können.\n\n✔ RICHTIG: \"Amazon Simple Queue Service (Amazon SQS)\".\n✘ FALSCH: SNS ist ein Pub/Sub-Benachrichtigungsdienst (Push an viele Abonnenten), keine Queue im klassischen Sinn. CloudFront ist ein CDN und Direct Connect eine Netzwerkverbindung."
+  },
+  {
+    "id": 239,
+    "domain": "technology",
+    "q": "Which AWS service is a serverless event bus that connects application data from your own apps, SaaS applications, and AWS services using events?",
+    "options": [
+      "Amazon EventBridge",
+      "Amazon SQS",
+      "AWS Batch",
+      "Amazon Redshift"
+    ],
+    "correct": [0],
+    "exp": "Amazon EventBridge ist ein serverloser Event-Bus, der Ereignisse aus eigenen Anwendungen, SaaS-Anwendungen und AWS-Diensten entgegennimmt und an Ziele weiterleitet. So lassen sich ereignisgesteuerte (event-driven) Architekturen aufbauen.\n\n✔ RICHTIG: \"Amazon EventBridge\".\n✘ FALSCH: SQS ist eine Message Queue, AWS Batch führt Batch-Jobs aus und Redshift ist ein Data Warehouse – keiner ist ein Event-Bus."
+  },
+  {
+    "id": 240,
+    "domain": "technology",
+    "q": "A company wants to run AWS compute and storage services on premises in its own data center for low-latency and local data processing needs, using the same AWS APIs. Which service should it use?",
+    "options": [
+      "AWS Outposts",
+      "AWS Lambda",
+      "Amazon EC2 Spot Instances",
+      "Amazon CloudFront"
+    ],
+    "correct": [0],
+    "exp": "AWS Outposts bringt native AWS-Infrastruktur, -Dienste und -APIs in das eigene Rechenzentrum des Kunden. Das eignet sich für Workloads mit Anforderungen an niedrige Latenz oder lokale Datenverarbeitung, die On-Premises bleiben müssen.\n\n✔ RICHTIG: \"AWS Outposts\".\n✘ FALSCH: Lambda ist serverloses Compute in der Cloud, Spot Instances sind ein EC2-Preismodell und CloudFront ist ein CDN – keiner bringt AWS-Hardware ins lokale Rechenzentrum."
+  },
+  {
+    "id": 241,
+    "domain": "technology",
+    "q": "Which AWS service provides a fully managed publish/subscribe (pub/sub) messaging service to send notifications to a large number of subscribers via email, SMS, or other endpoints?",
+    "options": [
+      "Amazon Simple Notification Service (Amazon SNS)",
+      "Amazon SQS",
+      "Amazon Kinesis",
+      "AWS Step Functions"
+    ],
+    "correct": [0],
+    "exp": "Amazon SNS ist ein verwalteter Pub/Sub-Messaging-Dienst. Nachrichten werden an Themen (Topics) gesendet und an viele Abonnenten zugestellt – per E-Mail, SMS, HTTP/S, Lambda oder SQS. Ideal für Fan-out-Benachrichtigungen.\n\n✔ RICHTIG: \"Amazon Simple Notification Service (Amazon SNS)\".\n✘ FALSCH: SQS ist eine Pull-basierte Queue. Kinesis verarbeitet Streaming-Daten. AWS Step Functions orchestrieren Workflows."
+  },
+  {
+    "id": 242,
+    "domain": "technology",
+    "q": "Which AWS service lets you coordinate multiple AWS services into serverless workflows using visual, state-machine-based orchestration?",
+    "options": [
+      "AWS Step Functions",
+      "Amazon SQS",
+      "Amazon Athena",
+      "AWS Config"
+    ],
+    "correct": [0],
+    "exp": "AWS Step Functions orchestriert mehrere AWS-Dienste zu serverlosen Workflows mithilfe visueller State Machines. Es koordiniert Schritte, behandelt Fehler und Wiederholungen und macht komplexe Abläufe nachvollziehbar.\n\n✔ RICHTIG: \"AWS Step Functions\".\n✘ FALSCH: SQS ist eine Message Queue, Athena ein Abfragedienst für S3 und AWS Config bewertet Ressourcenkonfigurationen – keiner orchestriert Workflows."
+  },
+  {
+    "id": 243,
+    "domain": "technology",
+    "q": "Which AWS service allows developers to create, publish, and secure REST and WebSocket APIs that act as a front door for applications to access backend services?",
+    "options": [
+      "Amazon API Gateway",
+      "Amazon Route 53",
+      "Elastic Load Balancing",
+      "AWS Direct Connect"
+    ],
+    "correct": [0],
+    "exp": "Amazon API Gateway ist ein verwalteter Dienst zum Erstellen, Veröffentlichen, Sichern und Überwachen von REST- und WebSocket-APIs. Es fungiert als \"Eingangstür\", über die Anwendungen auf Backend-Dienste wie Lambda oder EC2 zugreifen.\n\n✔ RICHTIG: \"Amazon API Gateway\".\n✘ FALSCH: Route 53 ist DNS, Elastic Load Balancing verteilt Netzwerk-/HTTP-Traffic über Instanzen und Direct Connect ist eine dedizierte Netzwerkverbindung – keiner ist ein API-Management-Dienst."
+  },
+  {
+    "id": 244,
+    "domain": "technology",
+    "q": "Which AWS service provides a browser-based shell, pre-authenticated with your console credentials, that includes the AWS CLI and common tools for managing resources from the AWS Management Console?",
+    "options": [
+      "AWS CloudShell",
+      "Amazon WorkSpaces",
+      "AWS Cloud9 only for paid plans",
+      "Amazon AppStream 2.0"
+    ],
+    "correct": [0],
+    "exp": "AWS CloudShell ist eine browserbasierte Shell, die direkt aus der AWS Management Console gestartet wird. Sie ist bereits mit den Konsolen-Anmeldeinformationen authentifiziert und enthält die AWS CLI sowie gängige Tools – ohne lokale Installation.\n\n✔ RICHTIG: \"AWS CloudShell\".\n✘ FALSCH: Amazon WorkSpaces stellt virtuelle Desktops bereit. AWS Cloud9 ist eine cloudbasierte IDE. Amazon AppStream 2.0 streamt Desktop-Anwendungen."
+  },
+  {
+    "id": 245,
+    "domain": "technology",
+    "q": "Which of the following are ways to interact with and manage AWS services?",
+    "options": [
+      "AWS Management Console",
+      "AWS Command Line Interface (AWS CLI)",
+      "Amazon S3 Glacier",
+      "Amazon EC2 Auto Scaling",
+      "AWS Shield"
+    ],
+    "correct": [0, 1],
+    "exp": "AWS bietet mehrere Wege zur Verwaltung von Diensten: die webbasierte AWS Management Console, die AWS Command Line Interface (CLI) für die Kommandozeile sowie SDKs zur programmatischen Nutzung in Anwendungen.\n\n✔ RICHTIG: \"AWS Management Console\" und \"AWS Command Line Interface (AWS CLI)\".\n✘ FALSCH: S3 Glacier (Archivspeicher), EC2 Auto Scaling (Kapazitätsanpassung) und AWS Shield (DDoS-Schutz) sind AWS-Dienste, aber keine Verwaltungsschnittstellen."
+  },
+  {
+    "id": 246,
+    "domain": "technology",
+    "q": "A company runs a NoSQL workload and wants a serverless database that automatically scales, requires no server management, and delivers single-digit millisecond performance at any scale. Which AWS service should it choose?",
+    "options": [
+      "Amazon DynamoDB",
+      "Amazon RDS for MySQL",
+      "Amazon Redshift",
+      "Amazon Aurora"
+    ],
+    "correct": [0],
+    "exp": "Amazon DynamoDB ist eine serverlose, vollständig verwaltete NoSQL-Key-Value- und Dokumentdatenbank. Sie skaliert automatisch, erfordert keine Serververwaltung und liefert konstante Performance im einstelligen Millisekundenbereich – auch bei sehr großen Lasten.\n\n✔ RICHTIG: \"Amazon DynamoDB\".\n✘ FALSCH: RDS for MySQL und Aurora sind relationale Datenbanken (SQL). Redshift ist ein Data Warehouse für Analysen – keiner ist eine serverlose NoSQL-Datenbank."
+  },
+  {
+    "id": 247,
+    "domain": "technology",
+    "q": "Which AWS service helps move large amounts of data between on-premises storage and AWS storage services (such as Amazon S3 or Amazon EFS) over the network in an automated, accelerated way?",
+    "options": [
+      "AWS DataSync",
+      "AWS Snowmobile",
+      "Amazon CloudFront",
+      "AWS Trusted Advisor"
+    ],
+    "correct": [0],
+    "exp": "AWS DataSync automatisiert und beschleunigt den Online-Datentransfer zwischen On-Premises-Speichersystemen und AWS-Diensten wie Amazon S3, Amazon EFS und Amazon FSx. Es eignet sich für Migrationen, Replikation und regelmäßige Datentransfers über das Netzwerk.\n\n✔ RICHTIG: \"AWS DataSync\".\n✘ FALSCH: Snowmobile ist ein physischer Exabyte-Transport (offline). CloudFront ist ein CDN und Trusted Advisor ein Empfehlungsdienst."
+  },
+  {
+    "id": 248,
+    "domain": "technology",
+    "q": "Which AWS service provides a global content delivery network (CDN) that also integrates with AWS Shield and AWS WAF to improve security while reducing latency for end users?",
+    "options": [
+      "Amazon CloudFront",
+      "AWS Global Accelerator",
+      "Amazon Route 53",
+      "AWS Transit Gateway"
+    ],
+    "correct": [0],
+    "exp": "Amazon CloudFront ist ein globales Content Delivery Network (CDN), das Inhalte an Edge Locations zwischenspeichert und so die Latenz senkt. Es integriert sich mit AWS Shield (DDoS-Schutz) und AWS WAF, um zusätzlich die Sicherheit zu erhöhen.\n\n✔ RICHTIG: \"Amazon CloudFront\".\n✘ FALSCH: Global Accelerator verbessert Verfügbarkeit/Latenz über das AWS-Netzwerk, cached aber keine Inhalte. Route 53 ist DNS und Transit Gateway verbindet Netzwerke."
+  },
+  {
+    "id": 249,
+    "domain": "billing",
+    "q": "A company has a predictable, steady amount of compute usage and wants to reduce costs by committing to a consistent amount of usage (measured in $/hour) for a 1- or 3-year term, with flexibility across instance families, sizes, and Regions. Which pricing model should it use?",
+    "options": [
+      "Compute Savings Plans",
+      "On-Demand Instances",
+      "Spot Instances",
+      "Dedicated Hosts"
+    ],
+    "correct": [0],
+    "exp": "Compute Savings Plans bieten erhebliche Rabatte (ähnlich Reserved Instances) im Austausch für die Verpflichtung auf einen konstanten Nutzungsbetrag (gemessen in $/Stunde) über 1 oder 3 Jahre. Sie sind sehr flexibel und gelten automatisch über Instance-Familien, -Größen, Regionen sowie für EC2, Fargate und Lambda.\n\n✔ RICHTIG: \"Compute Savings Plans\".\n✘ FALSCH: On-Demand ist am teuersten und erfordert keine Verpflichtung. Spot Instances sind für unterbrechbare Workloads. Dedicated Hosts adressieren Lizenz-/Isolationsanforderungen, nicht primär verpflichtungsbasierte Rabatte."
+  },
+  {
+    "id": 250,
+    "domain": "billing",
+    "q": "Which AWS tool provides the most comprehensive and granular set of cost and usage data, including hourly line items, that can be analyzed in tools like Amazon Athena or Amazon QuickSight?",
+    "options": [
+      "AWS Cost and Usage Report (AWS CUR)",
+      "AWS Budgets",
+      "AWS Pricing Calculator",
+      "AWS Trusted Advisor"
+    ],
+    "correct": [0],
+    "exp": "Der AWS Cost and Usage Report (CUR) liefert die umfassendsten und detailliertesten Kosten- und Nutzungsdaten, bis hinunter auf stündliche Line-Items. Die Daten lassen sich nach Amazon S3 exportieren und z. B. mit Amazon Athena oder QuickSight analysieren.\n\n✔ RICHTIG: \"AWS Cost and Usage Report (AWS CUR)\".\n✘ FALSCH: AWS Budgets setzt Budgets und alarmiert. Der Pricing Calculator schätzt zukünftige Kosten vor dem Deployment. Trusted Advisor gibt allgemeine Empfehlungen – keiner liefert derart granulare Abrechnungsdaten."
+  },
+  {
+    "id": 251,
+    "domain": "billing",
+    "q": "Which of the following correctly describes the three types of offers available under the AWS Free Tier?",
+    "options": [
+      "Always free, 12-months free, and short-term free trials",
+      "Free for nonprofits only, free for students only, and free for startups only",
+      "Free compute, free storage, and free networking forever",
+      "A single 30-day free trial of all AWS services"
+    ],
+    "correct": [0],
+    "exp": "Das AWS Free Tier umfasst drei Typen: \"Always Free\" (dauerhaft kostenlos bis zu bestimmten Limits, z. B. Lambda-Anfragen), \"12 Months Free\" (12 Monate kostenlos ab Anmeldung, z. B. EC2 t2.micro-Stunden) und \"Trials\" (kurzfristige, dienstspezifische Testzeiträume).\n\n✔ RICHTIG: \"Always free, 12-months free, and short-term free trials\".\n✘ FALSCH: Das Free Tier ist nicht auf bestimmte Zielgruppen beschränkt, nicht dauerhaft für alle Compute/Storage/Networking kostenlos und nicht ein einzelner 30-Tage-Test aller Dienste."
+  },
+  {
+    "id": 252,
+    "domain": "billing",
+    "q": "A company wants to find, buy, and immediately start using third-party software (such as security appliances and machine images), with the charges appearing on its single AWS bill. Which AWS offering enables this?",
+    "options": [
+      "AWS Marketplace",
+      "AWS Artifact",
+      "AWS Budgets",
+      "AWS Config"
+    ],
+    "correct": [0],
+    "exp": "AWS Marketplace ist ein digitaler Katalog, in dem Kunden Software und Services von Drittanbietern finden, kaufen, bereitstellen und verwalten können. Die Kosten werden konsolidiert über die normale AWS-Rechnung abgerechnet.\n\n✔ RICHTIG: \"AWS Marketplace\".\n✘ FALSCH: AWS Artifact liefert Compliance-Dokumente. AWS Budgets verwaltet Budgets. AWS Config bewertet Ressourcenkonfigurationen – keiner ist ein Marktplatz für Drittanbieter-Software."
+  },
+  {
+    "id": 253,
+    "domain": "billing",
+    "q": "When purchasing an Amazon EC2 Reserved Instance, which payment option provides the largest discount?",
+    "options": [
+      "All Upfront",
+      "Partial Upfront",
+      "No Upfront",
+      "Hourly On-Demand"
+    ],
+    "correct": [0],
+    "exp": "Reserved Instances bieten drei Zahlungsoptionen: All Upfront (komplette Zahlung im Voraus, größter Rabatt), Partial Upfront (teilweise im Voraus, mittlerer Rabatt) und No Upfront (keine Vorauszahlung, geringster Rabatt). Je mehr im Voraus gezahlt wird, desto höher der Rabatt.\n\n✔ RICHTIG: \"All Upfront\".\n✘ FALSCH: Partial und No Upfront bieten geringere Rabatte. Hourly On-Demand ist gar kein RI-Modell, sondern die teuerste, verpflichtungsfreie Abrechnung."
+  },
+  {
+    "id": 254,
+    "domain": "billing",
+    "q": "Which support features are included for all AWS customers at no additional charge under the AWS Basic Support plan?",
+    "options": [
+      "24/7 access to customer service for account and billing questions",
+      "Access to a subset of AWS Trusted Advisor core checks",
+      "A designated Technical Account Manager (TAM)",
+      "Less than 15-minute response for business-critical issues",
+      "Phone access to Cloud Support Engineers for troubleshooting"
+    ],
+    "correct": [0, 1],
+    "exp": "Der AWS Basic Support Plan ist für alle Kunden kostenlos und umfasst: 24/7-Zugang zum Kundenservice für Konto- und Abrechnungsfragen, Dokumentation, Whitepapers, Support-Foren sowie eine Auswahl der Trusted-Advisor-Core-Checks.\n\n✔ RICHTIG: \"24/7 access to customer service for account and billing questions\" und \"Access to a subset of AWS Trusted Advisor core checks\".\n✘ FALSCH: Ein designierter TAM ist Enterprise-Support vorbehalten. Reaktionszeiten unter 15 Minuten und technischer Support per Telefon durch Cloud Support Engineers sind erst ab kostenpflichtigen Plänen (Business/Enterprise) enthalten."
+  },
+  {
+    "id": 255,
+    "domain": "billing",
+    "q": "A company wants to set a custom budget for both its monthly cost and its resource usage, and be alerted when actual or forecasted values exceed defined thresholds. Which AWS service should it use?",
+    "options": [
+      "AWS Budgets",
+      "AWS Cost and Usage Report",
+      "AWS Pricing Calculator",
+      "Amazon CloudWatch Logs"
+    ],
+    "correct": [0],
+    "exp": "AWS Budgets erlaubt das Festlegen benutzerdefinierter Budgets für Kosten, Nutzung sowie Reserved-Instance-/Savings-Plans-Auslastung und -Abdeckung. Bei Überschreitung der tatsächlichen oder prognostizierten Werte werden Benachrichtigungen ausgelöst.\n\n✔ RICHTIG: \"AWS Budgets\".\n✘ FALSCH: Der Cost and Usage Report liefert detaillierte Daten, alarmiert aber nicht. Der Pricing Calculator schätzt Kosten im Voraus. CloudWatch Logs sammelt Protokolldaten, kein Budget-Management."
+  },
+  {
+    "id": 256,
+    "domain": "billing",
+    "q": "Which statement about AWS cost allocation tags is correct?",
+    "options": [
+      "There are AWS-generated tags and user-defined tags, and both must be activated in the Billing console to appear in cost reports",
+      "Only AWS can create cost allocation tags",
+      "Tags are automatically applied to costs with no activation required",
+      "Cost allocation tags can only be applied to Amazon EC2 instances"
+    ],
+    "correct": [0],
+    "exp": "Es gibt zwei Arten von Cost Allocation Tags: AWS-generierte Tags (z. B. aws:createdBy) und benutzerdefinierte Tags (vom Kunden vergeben). Beide müssen in der Billing-Konsole aktiviert werden, bevor sie in Kosten- und Nutzungsberichten zur Aufschlüsselung erscheinen.\n\n✔ RICHTIG: \"There are AWS-generated tags and user-defined tags, and both must be activated in the Billing console to appear in cost reports\".\n✘ FALSCH: Auch Kunden können Tags erstellen. Tags müssen für die Kostenzuordnung aktiviert werden. Tags lassen sich auf viele Ressourcentypen anwenden, nicht nur auf EC2."
+  },
+  {
+    "id": 257,
+    "domain": "billing",
+    "q": "What is the main difference between EC2 Instance Savings Plans and Compute Savings Plans?",
+    "options": [
+      "EC2 Instance Savings Plans offer the largest discounts but lock you into a specific instance family in a Region, while Compute Savings Plans offer more flexibility across families, Regions, and compute services",
+      "Compute Savings Plans only apply to Amazon S3 storage",
+      "EC2 Instance Savings Plans can only be purchased for Spot Instances",
+      "There is no difference between the two plans"
+    ],
+    "correct": [0],
+    "exp": "EC2 Instance Savings Plans bieten die höchsten Rabatte, binden aber an eine bestimmte Instance-Familie in einer Region (Größe, OS und Tenancy bleiben flexibel). Compute Savings Plans bieten etwas geringere Rabatte, dafür maximale Flexibilität über Instance-Familien, Regionen sowie EC2, Fargate und Lambda hinweg.\n\n✔ RICHTIG: \"EC2 Instance Savings Plans offer the largest discounts but lock you into a specific instance family in a Region, while Compute Savings Plans offer more flexibility across families, Regions, and compute services\".\n✘ FALSCH: Savings Plans gelten nicht für S3-Storage, sind nicht auf Spot beschränkt, und die beiden Pläne unterscheiden sich klar in Flexibilität und Rabatthöhe."
+  },
+  {
+    "id": 258,
+    "domain": "billing",
+    "q": "Which AWS service uses machine learning to continuously monitor spending and automatically detect unusual or unexpected cost spikes?",
+    "options": [
+      "AWS Cost Anomaly Detection",
+      "AWS Pricing Calculator",
+      "AWS Artifact",
+      "Amazon Inspector"
+    ],
+    "correct": [0],
+    "exp": "AWS Cost Anomaly Detection nutzt Machine Learning, um Ausgabenmuster kontinuierlich zu überwachen und ungewöhnliche oder unerwartete Kostenanstiege automatisch zu erkennen. Es sendet Benachrichtigungen, damit Teams schnell reagieren können.\n\n✔ RICHTIG: \"AWS Cost Anomaly Detection\".\n✘ FALSCH: Der Pricing Calculator schätzt Kosten vorab. AWS Artifact liefert Compliance-Dokumente. Amazon Inspector ist ein Sicherheits-Scanner – keiner erkennt Kostenanomalien."
+  },
+  {
+    "id": 259,
+    "domain": "billing",
+    "q": "What is a key billing benefit of using consolidated billing in AWS Organizations across multiple accounts?",
+    "options": [
+      "Combined usage across all accounts can reach volume pricing tiers more quickly, lowering the overall cost",
+      "Each account must be paid with a separate credit card",
+      "It automatically deletes unused resources to save money",
+      "It removes the need to monitor any costs"
+    ],
+    "correct": [0],
+    "exp": "Bei Consolidated Billing in AWS Organizations wird die Nutzung aller Mitgliedskonten für die Abrechnung zusammengefasst. Dadurch werden Mengenrabatt-Stufen (Volume Pricing Tiers, z. B. bei S3 oder Datentransfer) schneller erreicht, was die Gesamtkosten senkt. Zudem gibt es nur eine Rechnung.\n\n✔ RICHTIG: \"Combined usage across all accounts can reach volume pricing tiers more quickly, lowering the overall cost\".\n✘ FALSCH: Es gibt eine konsolidierte Zahlung statt separater Karten. Ressourcen werden nicht automatisch gelöscht, und das Monitoring von Kosten bleibt weiterhin nötig."
+  },
+  {
+    "id": 260,
+    "domain": "billing",
+    "q": "A company wants to view historical spending patterns and forecast its future AWS costs over the coming months based on past usage. Which AWS tool is best suited for this?",
+    "options": [
+      "AWS Cost Explorer",
+      "AWS Pricing Calculator",
+      "AWS Trusted Advisor",
+      "AWS Artifact"
+    ],
+    "correct": [0],
+    "exp": "AWS Cost Explorer visualisiert historische Kosten und Nutzung über die Zeit und kann anhand vergangener Muster zukünftige Kosten prognostizieren (Forecasting). Damit lassen sich Trends erkennen und das Budget planen.\n\n✔ RICHTIG: \"AWS Cost Explorer\".\n✘ FALSCH: Der Pricing Calculator schätzt Kosten für noch nicht bereitgestellte Workloads (keine historischen Daten). Trusted Advisor gibt Optimierungsempfehlungen und AWS Artifact liefert Compliance-Dokumente."
   }
 ];
 
@@ -2329,6 +3658,10 @@ const QUESTIONS = [
 const SES_KEY  = "awsclf_c02_session_v2";   // laufender Durchlauf (resume)
 const HIST_KEY = "awsclf_c02_history_v2";    // persistente Historie (nur Delete-all löscht)
 const PASS_PCT = 70;
+/* ---- KI-adaptiver Modus: Sicherheitsgrenzen ---- */
+const AI_MAX_PRESENT      = 60;   // harte Obergrenze an Fragen pro KI-Lauf (verhindert Endlos-Lauf)
+const AI_MIN_BEFORE_FINISH = 15;  // so viele Fragen müssen min. drankommen, bevor die KI "fertig" sagen darf
+const AI_MAX_REPEATS      = 3;    // eine Frage darf pro Lauf höchstens so oft wiederholt werden ("nicht unendlich")
 const byId = id => QUESTIONS.find(x => x.id === id);
 
 let S = null;                                 // aktive Session (in-progress) oder null
@@ -2384,25 +3717,32 @@ function startSession(ids, randomizeOrder, mode){
   saveSession(); render(); window.scrollTo({top:0});
 }
 function recordRun(){
-  const wrongIds = S.order.filter(id => !(S.committed[id] && S.committed[id].ok));
-  HIST.runs.push({ ts:Date.now(), mode:S.mode, presentedIds:S.order.slice(), wrongIds });
+  // Im KI-Modus kann S.order eine ID mehrfach enthalten (Wiederholungen). Für eine saubere
+  // Historie pro Frage auf EINEN Eintrag reduzieren; maßgeblich ist die zuletzt gegebene Antwort.
+  const uniq = [...new Set(S.order)];
+  const wrongIds = uniq.filter(id => !(S.committed[id] && S.committed[id].ok));
+  HIST.runs.push({ ts:Date.now(), mode:S.mode, presentedIds:uniq, wrongIds });
   if(HIST.runs.length > 500) HIST.runs = HIST.runs.slice(-500);
   saveHist();
 }
 function liveScore(){
   let ans=0, ok=0;
-  S.order.forEach(id=>{ if(S.committed[id]){ ans++; if(S.committed[id].ok) ok++; } });
-  return {ans, ok, total:S.order.length};
+  const uniq = [...new Set(S.order)];
+  uniq.forEach(id=>{ if(S.committed[id]){ ans++; if(S.committed[id].ok) ok++; } });
+  return {ans, ok, total:uniq.length};
 }
 
 /* ---- Header ---- */
 function setHeader(){
   const inRun = !!(S && S.pos < S.order.length);
   const sc = S ? liveScore() : null;
-  document.getElementById("metaProgress").textContent = inRun ? `Frage ${S.pos+1} / ${S.order.length}` : "";
+  const ai = inRun && S.aiMode;
+  document.getElementById("metaProgress").textContent =
+    inRun ? (ai ? `Frage ${S.pos+1} · KI-adaptiv` : `Frage ${S.pos+1} / ${S.order.length}`) : "";
   document.getElementById("metaScore").innerHTML = (inRun && sc.ans>0) ? `Richtig: <b>${sc.ok}/${sc.ans}</b>` : "";
   document.getElementById("abandonBtn").style.display = inRun ? "inline-block" : "none";
-  document.getElementById("progFill").style.width = (inRun ? Math.round(S.pos/S.order.length*100) : 0) + "%";
+  const pct = inRun ? (ai ? Math.min(100, Math.round((S.pos+1)/AI_MAX_PRESENT*100)) : Math.round(S.pos/S.order.length*100)) : 0;
+  document.getElementById("progFill").style.width = pct + "%";
 }
 
 /* ---- Router ---- */
@@ -2423,7 +3763,7 @@ function renderQuestion(){
   const multi = q.correct.length > 1;
   const committed = S.committed[id];
   const letters = "ABCDEFGH";
-  const lenientSingle = SET.lenient && !multi;   // Einfachauswahl darf nach Feedback korrigiert werden
+  const lenientSingle = SET.lenient && !multi && !S.aiMode;   // im KI-Modus: keine Korrektur (saubere Attempt-Historie)
 
   let opts = "";
   order.forEach((origIdx, displayIdx)=>{
@@ -2444,12 +3784,21 @@ function renderQuestion(){
     ? `<div class="selnote">Wähle genau <b>${q.correct.length}</b> Antworten aus.</div>`
     : `<div class="selnote">Wähle <b>1</b> Antwort aus.</div>`;
 
+  const aiRepeat = S.aiMode && (S.presentCount && S.presentCount[id] > 1);
+  const qnumTxt = S.aiMode
+    ? `Frage ${S.pos+1} · KI-adaptiv${aiRepeat?` · Wiederholung ${S.presentCount[id]}/${AI_MAX_REPEATS}`:""}`
+    : `Frage ${S.pos+1} von ${S.order.length}${S.mode!=="full"?" · Wiederholung":""}`;
+  const aiBadge = S.aiMode ? `<span class="badge aimode">🤖 KI wählt</span>` : "";
+  const aiReason = (S.aiMode && S.lastReason && !committed)
+    ? `<div class="ai-reason">KI-Begründung der Auswahl: ${escapeHtml(S.lastReason)}</div>` : "";
+
   app.innerHTML = `
     <div class="qhead">
-      <span class="qnum">Frage ${S.pos+1} von ${S.order.length}${S.mode!=="full"?" · Wiederholung":""}</span>
-      <span class="badge ${q.domain}">${DOMAINS[q.domain].name}</span>
+      <span class="qnum">${qnumTxt}</span>
+      <span style="display:flex;gap:8px">${aiBadge}<span class="badge ${q.domain}">${DOMAINS[q.domain].name}</span></span>
     </div>
     <div class="question">${escapeHtml(q.q)}</div>
+    ${aiReason}
     ${selnote}
     <ul class="options" id="optList">${opts}</ul>
     <div class="explain" id="explain"></div>
@@ -2493,8 +3842,11 @@ function wireSelection(q, multi){
 }
 
 function commit(q, sel){
+  const already = !!S.committed[q.id];
   const ok = q.correct.slice().sort().join(",") === sel.slice().sort().join(",");
   S.committed[q.id] = { sel:sel.slice(), ok };
+  // KI-Modus: jeden (ersten) Beantwortungs-Versuch chronologisch protokollieren (für Wiederholungs-Logik & KI-Kontext).
+  if(S.aiMode && !already){ (S.trail = S.trail || []).push({ id:q.id, domain:q.domain, ok }); }
   saveSession(); renderQuestion(); setHeader();
   const ex = document.getElementById("explain"); if(ex) ex.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
@@ -2507,6 +3859,7 @@ function showExplanation(q, ok){
 
 function showNextButton(){
   const actions = document.getElementById("actions");
+  if(S.aiMode){ showAiNextButton(); return; }
   const last = S.pos === S.order.length-1;
   actions.innerHTML = `<button class="btn primary" id="nextBtn">${last?'Durchlauf abschließen &amp; auswerten':'Nächste Frage'}</button>`;
   document.getElementById("nextBtn").onclick = ()=>{
@@ -2534,8 +3887,12 @@ function renderOverview(){
       <p style="font-size:13px">Aktuell <b>${QUESTIONS.length}</b> Frage(n) im Pool.</p>
       <div class="actions" style="justify-content:center">
         <button class="btn primary" id="startBtn">Übungsprüfung starten</button>
-      </div></div>`;
+        <button class="btn aibtn" id="startAi" ${aiAvailable()?'':'disabled'}>🤖 KI-adaptiver Modus</button>
+      </div>
+      <p class="ai-hint">KI-adaptiver Modus: GPT (Standard ${escapeHtml(AICFG.model)}) wählt nach jeder Antwort die wichtigste nächste Frage — wiederholt Schwachstellen, bis sie sitzen.${aiAvailable()?'':' <b>API-Key nötig</b> — klicke 🔑 rechts oben.'}</p>
+      </div>`;
     document.getElementById("startBtn").onclick = ()=>startSession(QUESTIONS.map(q=>q.id), true, "full");
+    const sa=document.getElementById("startAi"); if(sa) sa.onclick = ()=>startAiSession();
     return;
   }
 
@@ -2596,6 +3953,7 @@ function renderOverview(){
       <div class="chkrow"><input type="checkbox" id="shuffleChk" checked><label for="shuffleChk">Fragen-Reihenfolge zufällig mischen (sonst gleiche Reihenfolge wie zuletzt). Antwortoptionen werden immer gemischt.</label></div>
       <div class="chkrow"><input type="checkbox" id="lenientChk" ${SET.lenient?'checked':''}><label for="lenientChk">Korrektur bei Einfachauswahl erlauben („Schummeln" — nach Sofort-Feedback andere Option wählbar). Aus = streng fixiert (z.B. für Kursteilnehmende).</label></div>
       <div class="menucol">
+        <button class="btn aibtn" id="mAi" ${aiAvailable()?'':'disabled'}>🤖 KI-adaptiver Modus — GPT wählt die nächste Frage ${aiAvailable()?'':'<span class="cnt">API-Key nötig</span>'}</button>
         <button class="btn orange" id="mAll">Komplett von vorne — alle Fragen <span class="cnt">${QUESTIONS.length}</span></button>
         <button class="btn primary" id="mN1" ${n1.length?'':'disabled'}>Nur im letzten Durchlauf falsche <span class="cnt">${n1.length}</span></button>
         <button class="btn primary" id="mN2" ${(runs>=2&&n2.length)?'':'disabled'}>In den letzten 2 Durchläufen durchgehend falsche <span class="cnt">${runs>=2?n2.length:'–'}</span></button>
@@ -2617,6 +3975,7 @@ function renderOverview(){
   if(lenChk) lenChk.onchange = ()=>{ SET.lenient = lenChk.checked; saveSettings(); };
   const rnd = ()=>document.getElementById("shuffleChk").checked;
   const go = (ids, mode)=>{ const r=rnd(); startSession(r?ids:orderByLastRun(ids), r, mode); };
+  const mAi=document.getElementById("mAi"); if(mAi && aiAvailable()) mAi.onclick = ()=>startAiSession();
   document.getElementById("mAll").onclick = ()=>startSession(QUESTIONS.map(q=>q.id), true, "full");
   if(n1.length) document.getElementById("mN1").onclick = ()=>go(n1, "wrong1");
   if(runs>=2&&n2.length) document.getElementById("mN2").onclick = ()=>go(n2, "wrong2");
@@ -2692,6 +4051,8 @@ function askKey(initial){
   if(v && v.trim()){ AI.key = v.trim(); }
   else if(initial){ AI.key = null; }
   updateChatFoot(); renderChatLog();
+  // Menü neu zeichnen, damit der KI-adaptive Modus sofort frei-/gesperrt wird (außerhalb eines Laufs).
+  if(!initial && !(S && S.pos < S.order.length)) render();
 }
 
 function domainPerf(){
@@ -2773,6 +4134,7 @@ function renderMarkdown(src){
 }
 
 function renderChatLog(){
+  updateChatControls();
   const log=document.getElementById("chatLog"); if(!log) return;
   if(!AI.turns.length && !AI.busy){
     const hint = (AI.key || !aiNeedsKey())
@@ -2844,6 +4206,14 @@ function updateChatFoot(){
   if(f) f.textContent = `Modell: ${AICFG.model} · ${keyState} · pro Frage frischer Chat`;
   const lbl=document.getElementById("aiModelLbl"); if(lbl) lbl.textContent = AICFG.model;
 }
+// Senden während Warten sperren + ❓-Schnellhilfe nur zeigen, wenn sinnvoll (Key da, Chat noch leer).
+function updateChatControls(){
+  const inRun = !!(S && S.pos < S.order.length);
+  const send = document.getElementById("chatSend");
+  if(send) send.disabled = AI.busy || !inRun || (aiNeedsKey() && !AI.key);
+  const help = document.getElementById("aiHelpBtn");
+  if(help) help.style.display = (inRun && aiAvailable() && AI.turns.length===0 && !AI.busy) ? "" : "none";
+}
 
 function toggleCfg(){
   const box=document.getElementById("chatCfg");
@@ -2905,24 +4275,318 @@ function syncChat(){
     const box=document.getElementById("chatCfg"); if(box) box.style.display="none";
     renderChatLog();
   }
+  updateChatControls();
 }
 
 function wireChat(){
   const form=document.getElementById("chatForm");
   const input=document.getElementById("chatInput");
-  form.addEventListener("submit",e=>{ e.preventDefault(); const t=input.value; input.value=""; aiSend(t); });
-  input.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); form.requestSubmit(); } });
+  form.addEventListener("submit",e=>{ e.preventDefault(); if(AI.busy) return; const t=input.value; input.value=""; aiSend(t); });
+  input.addEventListener("keydown",e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); if(!AI.busy) form.requestSubmit(); } });
   document.getElementById("aiKeyBtn").onclick=()=>askKey(false);
   document.getElementById("aiCfgBtn").onclick=toggleCfg;
+  // ❓ Schnellhilfe: häufigste Frage direkt absenden, ohne tippen.
+  const help=document.getElementById("aiHelpBtn");
+  if(help) help.onclick=()=>{ if(!AI.busy && AI.turns.length===0) aiSend("Hallo, hilf mir bitte bei dieser Frage"); };
   updateChatFoot();
 }
+
+/* ============================================================================
+   KI-ADAPTIVER MODUS — GPT (Standard gpt-5.5) wählt dynamisch die nächste Frage.
+   Nur verfügbar, wenn ein API-Key vorliegt. Antworten der KI werden PROGRAMMATISCH
+   (JSON.parse) verarbeitet → striktes JSON-Schema, max. 1 Retry, sonst Fallback.
+   ============================================================================ */
+function aiAvailable(){ return !aiNeedsKey() || !!AI.key; }
+
+/* Strenger Selektor-Prompt. Bewusst getrennt vom Tutor-System-Prompt der Chat-Box. */
+const AI_SELECT_SYSTEM =
+`Du bist ein adaptiver Prüfungs-Coach für die Zertifizierung „AWS Certified Cloud Practitioner" (CLF-C02). Deine EINZIGE Aufgabe: anhand des bisherigen Testverlaufs „street-smart" die didaktisch WICHTIGSTE nächste Frage bestimmen, damit die lernende Person die Prüfung in wenigen Stunden sicher besteht.
+
+== ABSOLUT KRITISCH — MASCHINELLE VERARBEITUNG ==
+Deine Ausgabe wird NICHT von einem Menschen gelesen, sondern direkt von einem Programm mit JSON.parse() weiterverarbeitet. Das Programm läuft nur stabil, wenn du das Format STRIKTESTENS einhältst:
+• Gib AUSSCHLIESSLICH ein einziges JSON-Objekt aus — sonst NICHTS.
+• KEIN Markdown, KEINE Code-Fences (kein \`\`\`), KEIN Fließtext davor/danach, KEINE Kommentare, KEINE Zeilen-Erklärungen.
+• Genau diese Schlüssel, exakt diese Schreibweise:
+{"action":"ask"|"finish","id":<ganze Zahl|null>,"domain":"concepts"|"security"|"technology"|"billing"|null,"intent":"unseen"|"retry"|"reinforce","reason":"<kurze deutsche Begründung, höchstens 160 Zeichen>"}
+
+== AUSWAHL AUS 'kandidaten' ==
+Im Kontext bekommst du eine Liste „kandidaten" — konkrete Fragen (Feld „q" = Fragetext OHNE Antwortoptionen, „kind" = retry|unseen|reinforce, „domain", „asked"). WÄHLE DIE 'id' AUS DIESER LISTE. Lies die Fragetexte und entscheide inhaltlich, welche Frage als nächstes am wichtigsten ist.
+
+== BEDEUTUNG DER FELDER ==
+• action: "ask" = nächste Frage stellen. "finish" = Test beenden (nur wählen, wenn die schwachen Themen sitzen UND genügend Fragen drankamen — siehe regeln.finish_erlaubt_ab).
+• id: die gewählte Frage-id aus „kandidaten" (PFLICHT bei action "ask"). Nur falls keine Kandidatenliste passt, darfst du id=null setzen — dann wählt das Programm anhand von domain+intent.
+• intent: warum du sie wählst — "unseen" = neue Frage, "retry" = zuletzt falsche erneut, "reinforce" = Gemeisterte festigen.
+• domain: Zieldomäne der gewählten Frage (oder null).
+
+== STRATEGIE (best educated guess) ==
+• Prüfungsgewichte beachten: Security & Compliance 30%, Cloud Technology 34%, Cloud Concepts 24%, Billing 12% — schwache, stark gewichtete Domänen priorisieren.
+• Zuletzt falsche / wiederholt schwache Fragen ruhig WIEDERHOLEN, bis sie sitzen — aber gemeisterte Fragen NICHT endlos drillen (Obergrenze: regeln.max_wiederholungen_pro_frage).
+• Auf Wissenslücken reagieren, nicht stur abarbeiten. Halte Balance aus Wiederholen (Festigen) und Neuem (Abdeckung).
+Antworte JETZT mit genau einem JSON-Objekt.`;
+
+/* ---- Zustands-Helfer (pro Lauf) ---- */
+function aiCapped(id){ return (S.presentCount[id]||0) >= AI_MAX_REPEATS; }
+function aiMastered(id){ return !!(S.committed[id] && S.committed[id].ok); }
+function aiWeakOpen(id){ return !!(S.committed[id] && !S.committed[id].ok && !aiCapped(id)); }
+function aiUnseen(id){ return !((S.presentCount[id]||0) > 0); }
+
+/* ---- Kompakter Lernzustand für die KI (bewusst begrenzt) ---- */
+function computeAiState(){
+  const present = S.order.length;
+  const lastId = S.order[S.pos];
+  const lastQ = byId(lastId);
+  const domains = Object.keys(DOMAINS).map(k=>{
+    const ids = QUESTIONS.filter(q=>q.domain===k).map(q=>q.id);
+    const answered = ids.filter(id=>S.committed[id]);
+    const correct  = answered.filter(id=>S.committed[id].ok);
+    return {
+      key:k, name:DOMAINS[k].name, examWeight:DOMAINS[k].weight,
+      poolTotal:ids.length,
+      unseen: ids.filter(id=>aiUnseen(id)).length,
+      answered: answered.length,
+      correctRate: answered.length ? Math.round(correct.length/answered.length*100) : null,
+      weakOpen: ids.filter(id=>aiWeakOpen(id)).length
+    };
+  });
+  const weakOpen = QUESTIONS.filter(q=>aiWeakOpen(q.id)).slice(0,20).map(q=>({
+    id:q.id, domain:q.domain, asked:(S.presentCount[q.id]||0),
+    label: q.q.length>70 ? q.q.slice(0,67)+"…" : q.q
+  }));
+  const recent = (S.trail||[]).slice(-12).map(t=>({id:t.id, domain:t.domain, ok:t.ok}));
+  const last = lastQ ? { id:lastId, domain:lastQ.domain,
+                         ok: !!(S.committed[lastId] && S.committed[lastId].ok),
+                         asked:(S.presentCount[lastId]||0) } : null;
+  return {
+    ziel:"Lernende Person schreibt in ~4h die CLF-C02-Prüfung und will sicher bestehen. Wähle aus 'kandidaten' die didaktisch wichtigste nächste Frage.",
+    regeln:{
+      bestehensgrenze_prozent:PASS_PCT,
+      praesentiert_gesamt:present,
+      harte_obergrenze:AI_MAX_PRESENT,
+      finish_erlaubt_ab:AI_MIN_BEFORE_FINISH,
+      max_wiederholungen_pro_frage:AI_MAX_REPEATS,
+      hinweis:"Schwache/zuletzt falsche Fragen wiederholen bis sie sitzen, Gemeisterte nicht endlos. Prüfungsgewichte beachten. Wähle die 'id' aus 'kandidaten'."
+    },
+    domains,
+    zuletzt_beantwortet:last,
+    verlauf_letzte:recent,
+    schwache_offen:weakOpen,
+    kandidaten:aiCandidates(20)   // konkrete Auswahl-Fragen (nur Fragetext, OHNE Antwortoptionen)
+  };
+}
+/* Bis zu `limit` konkrete Auswahl-Fragen für die KI: offene Schwachstellen zuerst,
+   dann ungesehene Fragen nach Prüfungsgewicht (Round-Robin), zuletzt Gemeisterte zur
+   Festigung. Nur Fragetext, KEINE Antwortoptionen (klein halten). Nie gecappte Fragen. */
+function aiCandidates(limit){
+  limit = limit||20;
+  const out=[]; const seen=new Set();
+  const add=id=>{ if(out.length>=limit || seen.has(id) || aiCapped(id)) return;
+    seen.add(id); const q=byId(id);
+    let kind = aiWeakOpen(id) ? "retry" : (aiUnseen(id) ? "unseen" : "reinforce");
+    out.push({ id, domain:q.domain, kind, asked:(S.presentCount[id]||0),
+               q: q.q.length>180 ? q.q.slice(0,177)+"…" : q.q }); };
+  // 1) offene Schwachstellen (zuletzt falsch) — zur Wiederholung
+  QUESTIONS.filter(q=>aiWeakOpen(q.id)).forEach(q=>add(q.id));
+  // 2) ungesehene Fragen, über Domänen nach Prüfungsgewicht verteilt (Round-Robin)
+  const byDom={}; Object.keys(DOMAINS).forEach(k=>{ byDom[k]=QUESTIONS.filter(q=>q.domain===k && aiUnseen(q.id) && !aiCapped(q.id)).map(q=>q.id); });
+  const order=Object.keys(DOMAINS).sort((a,b)=>DOMAINS[b].weight-DOMAINS[a].weight);
+  let progressed=true;
+  while(out.length<limit && progressed){
+    progressed=false;
+    for(const k of order){ const arr=byDom[k]; if(arr && arr.length){ add(arr.shift()); progressed=true; if(out.length>=limit) break; } }
+  }
+  // 3) Rest mit Gemeisterten füllen (Festigung)
+  if(out.length<limit) QUESTIONS.filter(q=>aiMastered(q.id)).forEach(q=>add(q.id));
+  return out;
+}
+
+/* ---- KI-Aufruf für die Auswahl (max. 1 Retry) ---- */
+async function callSelector(role, userMsg, opt){
+  const body = { model:AICFG.model, messages:[
+    {role, content:AI_SELECT_SYSTEM},
+    {role:"user", content:userMsg}
+  ]};
+  if(opt.jsonFormat) body.response_format = {type:"json_object"};
+  if(opt.reasoning)  body.reasoning_effort = opt.reasoning;
+  const headers={"Content-Type":"application/json"};
+  if(AI.key) headers["Authorization"]="Bearer "+AI.key;
+  const res = await fetch(AICFG.endpoint,{method:"POST",headers,body:JSON.stringify(body)});
+  const data = await res.json().catch(()=>({}));
+  return {res,data};
+}
+function normalizeChoice(o){
+  if(!o || typeof o!=="object") return null;
+  const out = {};
+  out.action = (o.action==="finish") ? "finish" : "ask";
+  out.id     = (typeof o.id==="number" && isFinite(o.id)) ? Math.round(o.id) : null;
+  out.domain = (typeof o.domain==="string" && DOMAINS[o.domain]) ? o.domain : null;
+  out.intent = (o.intent==="unseen"||o.intent==="reinforce") ? o.intent : "retry";
+  out.reason = (typeof o.reason==="string") ? o.reason.slice(0,200) : "";
+  return out;
+}
+function parseSelectorJson(raw){
+  if(!raw) return null;
+  let s = String(raw).replace(/```json/gi,"").replace(/```/g,"").trim();
+  try{ return normalizeChoice(JSON.parse(s)); }catch(e){}
+  const a=s.indexOf("{"), b=s.lastIndexOf("}");
+  if(a>=0 && b>a){ try{ return normalizeChoice(JSON.parse(s.slice(a,b+1))); }catch(e){} }
+  return null;
+}
+async function aiSelectNext(){
+  const userMsg = "AKTUELLER LERNZUSTAND (JSON):\n" + JSON.stringify(computeAiState());
+  const role = AICFG.role || "developer";
+  // Für die AUSWAHL bewusst fix reasoning_effort="low" (schneller & günstiger), unabhängig von ⚙.
+  // Genau 2 Versuche = max. 1 Retry. Der Retry lässt reasoning_effort WEG → kein Crash bei Nicht-Reasoning-Modellen.
+  const attempts = [ {jsonFormat:true, reasoning:"low"}, {jsonFormat:false, reasoning:""} ];
+  for(let i=0;i<attempts.length;i++){
+    try{
+      const {res,data} = await callSelector(role, userMsg, attempts[i]);
+      if(!res.ok) continue;
+      const raw = ((data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||"").trim();
+      const parsed = parseSelectorJson(raw);
+      if(parsed) return {ok:true, parsed};
+    }catch(e){ /* Netzwerk-/Parsing-Fehler → nächster Versuch */ }
+  }
+  return {ok:false};   // nach dem einen Retry endgültig fehlgeschlagen
+}
+
+/* ---- Auswahl-Logik (Programm garantiert Gültigkeit & Terminierung) ---- */
+function pickByIntent(domain, intent, lastId){
+  const inDom = id => !domain || byId(id).domain===domain;
+  const all = QUESTIONS.map(q=>q.id).filter(id=>id!==lastId && !aiCapped(id));
+  let pref;
+  if(intent==="unseen")          pref = all.filter(id=>inDom(id) && aiUnseen(id));
+  else if(intent==="reinforce")  pref = all.filter(id=>inDom(id) && aiMastered(id));
+  else                           pref = all.filter(id=>inDom(id) && aiWeakOpen(id)); // retry
+  if(!pref.length) pref = all.filter(id=>inDom(id) && aiUnseen(id));   // sinnvoller Default: neue Frage
+  if(!pref.length) pref = all.filter(inDom);
+  if(!pref.length) pref = all;
+  if(!pref.length) return null;
+  return pref[Math.floor(Math.random()*pref.length)];
+}
+function examWeightedUnseenDomain(lastId){
+  const present = S.order.length || 1;
+  const cnt={}; Object.keys(DOMAINS).forEach(k=>cnt[k]=0);
+  S.order.forEach(id=>{ const q=byId(id); if(q) cnt[q.domain]++; });
+  const has = k => QUESTIONS.some(q=>q.domain===k && aiUnseen(q.id) && q.id!==lastId && !aiCapped(q.id));
+  const cand = Object.keys(DOMAINS).filter(has);
+  if(!cand.length) return null;
+  cand.sort((a,b)=> ((DOMAINS[b].weight/100)-(cnt[b]/present)) - ((DOMAINS[a].weight/100)-(cnt[a]/present)) );
+  const dom = cand[0];
+  const pool = QUESTIONS.filter(q=>q.domain===dom && aiUnseen(q.id) && q.id!==lastId && !aiCapped(q.id)).map(q=>q.id);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+// „Standard-Frage" als Fallback (auch Seed): erst offene Schwachstellen, dann gewichtetes Neuland.
+function pickFallbackId(lastId){
+  const avail = id => id!==lastId && !aiCapped(id);
+  let weak = QUESTIONS.map(q=>q.id).filter(id=>avail(id) && aiWeakOpen(id));
+  if(weak.length){
+    weak.sort((a,b)=>(S.presentCount[a]||0)-(S.presentCount[b]||0));
+    const lo=(S.presentCount[weak[0]]||0);
+    const top=weak.filter(id=>(S.presentCount[id]||0)===lo);
+    return top[Math.floor(Math.random()*top.length)];
+  }
+  const dom = examWeightedUnseenDomain(lastId);
+  if(dom!=null) return dom;
+  const any = QUESTIONS.map(q=>q.id).filter(avail);
+  if(any.length) return any[Math.floor(Math.random()*any.length)];
+  return null;
+}
+function resolveAiChoice(parsed, lastId){
+  const reason = parsed.reason || "";
+  if(parsed.action==="finish" && S.order.length >= AI_MIN_BEFORE_FINISH) return {finish:true, reason};
+  let id = null;
+  if(parsed.id!=null && byId(parsed.id) && !aiCapped(parsed.id)){
+    if(!(parsed.id===lastId && parsed.intent!=="retry")) id = parsed.id;  // unmittelbare Zufallswiederholung vermeiden
+  }
+  if(id==null) id = pickByIntent(parsed.domain, parsed.intent, lastId);
+  if(id==null) id = pickFallbackId(lastId);
+  if(id==null) return {finish:true, reason};
+  return {id, reason};
+}
+
+/* ---- Frage präsentieren / Lauf steuern ---- */
+function pickSeedId(){
+  // Quereinstieg: bekannte Schwachstellen aus der Historie zuerst, sonst gewichtetes Neuland.
+  const histWeak = [...new Set([...wrongLastN(1), ...oftenWrong(2)])].filter(id=>byId(id));
+  if(histWeak.length) return histWeak[Math.floor(Math.random()*histWeak.length)];
+  const fb = pickFallbackId(null);
+  return fb!=null ? fb : QUESTIONS[Math.floor(Math.random()*QUESTIONS.length)].id;
+}
+function presentAiQuestion(id){
+  S.order.push(id);
+  S.presentCount[id] = (S.presentCount[id]||0)+1;
+  S.optOrder[id] = shuffle(byId(id).options.map((_,i)=>i)); // bei Wiederholung neu mischen
+  delete S.committed[id];                                   // Wiederholung frisch beantwortbar
+  S.pos = S.order.length-1;
+  AI.boundId = null;                                        // frischer Tutor-Chat für die (ggf. wiederholte) Frage
+  saveSession(); render(); window.scrollTo({top:0,behavior:'smooth'});
+}
+function startAiSession(){
+  if(!aiAvailable()){ askKey(false); if(!aiAvailable()) return; }
+  hideAiWarn(); AI.warnShown=false;
+  S = { mode:"ai", aiMode:true, order:[], pos:0, committed:{}, optOrder:{},
+        trail:[], presentCount:{}, lastReason:"", aiBusy:false };
+  const seed = pickSeedId();
+  if(seed==null){ S=null; return; }
+  presentAiQuestion(seed);
+}
+async function aiAdvance(){
+  if(S.aiBusy) return;
+  S.aiBusy = true;
+  renderAiSelecting();
+  const lastId = S.order[S.pos];
+  let chosen=null, finish=false, commsFail=false;
+  if(S.order.length >= AI_MAX_PRESENT){
+    finish = true;                                  // harte Obergrenze erreicht
+  } else {
+    const r = await aiSelectNext();
+    if(r.ok){
+      const res = resolveAiChoice(r.parsed, lastId);
+      if(res.finish) finish=true; else chosen=res.id;
+      S.lastReason = res.reason || "";
+    } else {
+      commsFail = true;                             // Kommunikation/Parsing endgültig fehlgeschlagen
+      chosen = pickFallbackId(lastId);              // Standard-Frage als Fallback
+      S.lastReason = "Automatische Standard-Auswahl (API nicht erreichbar).";
+      if(chosen==null) finish = true;
+    }
+  }
+  S.aiBusy = false;
+  if(commsFail) showAiWarnOnce();
+  if(finish || chosen==null){ finishAiRun(); return; }
+  presentAiQuestion(chosen);
+}
+function finishAiRun(){
+  if(S && S.order && S.order.length) recordRun();
+  S=null; saveSession(); render(); window.scrollTo({top:0});
+}
+function showAiNextButton(){
+  const actions = document.getElementById("actions");
+  const reached = S.order.length >= AI_MAX_PRESENT;
+  actions.innerHTML =
+    `<button class="btn ghost" id="aiFinishBtn">Beenden &amp; auswerten</button>
+     <button class="btn aibtn" id="aiNextBtn">${reached?'Limit erreicht — auswerten':'Nächste Frage (KI wählt) →'}</button>`;
+  document.getElementById("aiFinishBtn").onclick = ()=>finishAiRun();
+  document.getElementById("aiNextBtn").onclick = ()=>{ reached ? finishAiRun() : aiAdvance(); };
+}
+function renderAiSelecting(){
+  const actions = document.getElementById("actions");
+  if(actions) actions.innerHTML = `<div class="ai-pick">🤖 KI wählt die nächste Frage<span class="dots"><i></i><i></i><i></i></span></div>`;
+}
+function showAiWarnOnce(){
+  if(AI.warnShown) return;
+  AI.warnShown = true;
+  const w=document.getElementById("aiWarn"); if(w) w.style.display="flex";
+}
+function hideAiWarn(){ const w=document.getElementById("aiWarn"); if(w) w.style.display="none"; }
 
 /* ---- boot ---- */
 (function init(){
   const saved = loadSession();
-  if(saved && saved.order && saved.pos < saved.order.length){ S = saved; }
+  if(saved && saved.order && saved.pos < saved.order.length){ S = saved; if(S.aiMode) S.aiBusy=false; }
   else { S = null; }
   wireChat();
+  const wc=document.getElementById("aiWarnClose"); if(wc) wc.onclick=hideAiWarn;
   askKey(true);     // API-Key beim Start abfragen (nur im Arbeitsspeicher)
   render();
 })();
