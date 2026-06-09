@@ -188,9 +188,25 @@
   .menucol .btn.aibtn .cnt{opacity:.9}
   .ai-hint{font-size:12px;color:var(--muted);margin:2px 0 0}
   /* unscheinbares „?"-Quick-Tip neben „KI wählt" (zeigt die KI-Begründung als Tooltip) */
-  .ai-why{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;margin-left:6px;
-    border-radius:50%;border:1px solid currentColor;font-size:10px;font-weight:700;opacity:.55;cursor:help;vertical-align:middle}
-  .ai-why:hover,.ai-why:focus{opacity:1;outline:none}
+  .ai-why{position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;margin-left:6px;
+    border-radius:50%;border:1px solid currentColor;font-size:10px;font-weight:700;opacity:.55;cursor:pointer;vertical-align:middle}
+  .ai-why:hover,.ai-why:focus,.ai-why.show{opacity:1;outline:none}
+  /* Custom-Tooltip: erscheint auf Hover, Fokus oder Klick (.show) — zuverlässiger als natives title */
+  .ai-why::after{
+    content:attr(data-reason);
+    position:absolute;top:150%;right:0;
+    width:max-content;max-width:280px;
+    background:#2a2342;color:#fff;font-size:12px;font-weight:400;letter-spacing:normal;text-transform:none;
+    line-height:1.45;text-align:left;padding:8px 11px;border-radius:8px;
+    box-shadow:0 6px 22px rgba(0,0,0,.28);
+    opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s;
+    white-space:normal;z-index:60}
+  .ai-why::before{
+    content:"";position:absolute;top:calc(150% - 6px);right:4px;
+    border:6px solid transparent;border-bottom-color:#2a2342;
+    opacity:0;visibility:hidden;transition:opacity .12s;z-index:61}
+  .ai-why:hover::after,.ai-why:focus::after,.ai-why.show::after,
+  .ai-why:hover::before,.ai-why:focus::before,.ai-why.show::before{opacity:1;visibility:visible}
   /* Anzahl-Dropdown */
   .countrow{display:flex;align-items:center;gap:9px;justify-content:center;margin:6px 0 2px;font-size:13px;color:var(--ink2)}
   .panel .countrow{justify-content:flex-start;margin:6px 0 12px}
@@ -3778,7 +3794,7 @@ function renderQuestion(){
   const multi = q.correct.length > 1;
   const committed = S.committed[id];
   const letters = "ABCDEFGH";
-  const lenientSingle = SET.lenient && !multi && !S.aiMode;   // im KI-Modus: keine Korrektur (saubere Attempt-Historie)
+  const lenientSingle = SET.lenient && !multi;   // „Schummeln": Single-Choice nach Sofort-Feedback korrigierbar (auch im KI-Modus)
 
   let opts = "";
   order.forEach((origIdx, displayIdx)=>{
@@ -3804,7 +3820,7 @@ function renderQuestion(){
     ? `Frage ${S.pos+1} von ${S.aiTarget||S.order.length} · KI-adaptiv${aiRepeat?` · Wiederholung dieser Frage ${S.presentCount[id]}/${AI_MAX_REPEATS}`:""}`
     : `Frage ${S.pos+1} von ${S.order.length}${S.mode!=="full"?" · Wiederholung":""}`;
   const aiWhy = (S.aiMode && S.lastReason)
-    ? `<span class="ai-why" title="${escapeAttr("Warum diese Frage? "+S.lastReason)}" tabindex="0">?</span>` : "";
+    ? `<span class="ai-why" data-reason="${escapeAttr("Warum diese Frage? "+S.lastReason)}" title="${escapeAttr("Warum diese Frage? "+S.lastReason)}" tabindex="0" role="button" aria-label="Begründung der KI anzeigen">?</span>` : "";
   const aiBadge = S.aiMode ? `<span class="badge aimode">🤖 KI wählt${aiWhy}</span>` : "";
 
   app.innerHTML = `
@@ -3817,6 +3833,19 @@ function renderQuestion(){
     <ul class="options" id="optList">${opts}</ul>
     <div class="explain" id="explain"></div>
     <div class="actions" id="actions"></div>`;
+
+  // „?"-Begründung: Klick blendet den Tooltip ein/aus (Hover funktioniert via CSS ohnehin)
+  const whyEl = app.querySelector(".ai-why");
+  if(whyEl){
+    whyEl.addEventListener("click", e=>{
+      e.stopPropagation();
+      const open = whyEl.classList.toggle("show");
+      if(open){
+        const close = ev=>{ if(!whyEl.contains(ev.target)){ whyEl.classList.remove("show"); document.removeEventListener("click", close); } };
+        setTimeout(()=>document.addEventListener("click", close), 0);
+      }
+    });
+  }
 
   if(committed){
     showExplanation(q, committed.ok);
@@ -3857,10 +3886,20 @@ function wireSelection(q, multi){
 
 function commit(q, sel){
   const already = !!S.committed[q.id];
+  const prevOk  = already ? S.committed[q.id].ok : null;
   const ok = q.correct.slice().sort().join(",") === sel.slice().sort().join(",");
   S.committed[q.id] = { sel:sel.slice(), ok };
   // KI-Modus: jeden (ersten) Beantwortungs-Versuch chronologisch protokollieren (für Wiederholungs-Logik & KI-Kontext).
-  if(S.aiMode && !already){ (S.trail = S.trail || []).push({ id:q.id, domain:q.domain, ok }); }
+  if(S.aiMode){
+    if(!already){
+      (S.trail = S.trail || []).push({ id:q.id, domain:q.domain, ok });
+    } else if(ok !== prevOk){
+      // „Schummeln"/Korrektur im KI-Modus: den letzten Trail-Eintrag DIESER Frage (die aktuelle Präsentation)
+      // nachziehen, damit Live-Score und KI-Auswahl-Logik (aiWeakOpen/aiMastered) konsistent bleiben.
+      const tr = S.trail || [];
+      for(let i = tr.length - 1; i >= 0; i--){ if(tr[i].id === q.id){ tr[i].ok = ok; break; } }
+    }
+  }
   saveSession(); renderQuestion(); setHeader();
   const ex = document.getElementById("explain"); if(ex) ex.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
@@ -4109,7 +4148,15 @@ function buildContextMsg(){
   const correctL=order.map((oi,di)=>q.correct.includes(oi)?L[di]:null).filter(Boolean).join(", ");
   const c=S.committed[id];
   let sel="noch nicht beantwortet";
-  if(c){ const sl=order.map((oi,di)=>c.sel.includes(oi)?L[di]:null).filter(Boolean).join(", "); sel=`${sl||'—'} (${c.ok?'RICHTIG':'FALSCH'})`; }
+  if(c){
+    const sl=order.map((oi,di)=>c.sel.includes(oi)?L[di]:null).filter(Boolean).join(", ");
+    sel=`${sl||'—'} (${c.ok?'RICHTIG':'FALSCH'})`;
+  } else if(Array.isArray(pendingSel) && pendingSel.length){
+    // Vorläufige (noch nicht bestätigte) Auswahl der lernenden Person mitliefern,
+    // damit der Chatbot z. B. „ist meine Auswahl korrekt?" beantworten kann.
+    const sl=order.map((oi,di)=>pendingSel.includes(oi)?L[di]:null).filter(Boolean).join(", ");
+    sel=`${sl||'—'} (vorläufig ausgewählt, noch NICHT mit „Antwort bestätigen" bestätigt)`;
+  }
   return `KONTEXT NUR ZUR AKTUELL ANGEZEIGTEN FRAGE:
 Domäne: ${DOMAINS[q.domain].name}
 Frage (Englisch): ${q.q}
