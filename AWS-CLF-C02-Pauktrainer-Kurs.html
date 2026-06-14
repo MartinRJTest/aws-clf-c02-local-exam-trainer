@@ -359,6 +359,7 @@
     <h3>1. KI-Assistent freischalten (einmal pro Browser-Fenster)</h3>
     <p>Klicke oben rechts im Assistenten-Bereich auf <b>🔑</b> und füge deinen persönlichen <b>Mammouth API-Key</b> ein (zu finden in deinem Mammouth-Konto unter <i>Einstellungen → API</i>). Der Key bleibt gespeichert, solange dieses Browser-Fenster offen ist — du musst ihn also nicht bei jeder Frage neu eingeben. Beim Schließen des Fensters wird er aus Sicherheitsgründen automatisch gelöscht.</p>
     <p>Über die Zeile auf der Startseite kannst du den Key jederzeit <b>ändern</b> oder gezielt nur den <b>Key entfernen</b> (dein Lernfortschritt bleibt erhalten). Sobald kein Key gespeichert ist, kann das Tool keine API-Aufrufe mehr machen — es können also <b>keine weiteren Kosten</b> entstehen. Wer ganz sichergehen will, nutzt unten „Alle lokalen Daten &amp; API-Key löschen".</p>
+    <p>Voreingestellt ist das günstige Modell <b>gpt-5.4-mini</b> — für die Frageerklärungen mehr als ausreichend und schonend für dein Prepaid-Guthaben. Nutze den Assistenten fürs Lernen rund um die Fragen, dann reicht das Guthaben locker.</p>
 
     <h3>2. Lernfokus wählen</h3>
     <p>Im Kasten <b>🎯 Lernfokus</b> stellst du ein, womit du üben willst. Stelle zuerst oben <b>„Mein Kursstand"</b> auf das Thema, das ihr im Kurs gerade behandelt habt — welche Kategorie das jeweils ist, erfährst du im Unterricht. Dann wähle einen Modus:</p>
@@ -4475,7 +4476,7 @@ let SET = loadSettings();
    - Pro Frage ein eigener, frischer Chat (Multi-Turn). Beim Fragewechsel weg.
    - Modell / Endpoint / System-Prompt sind über ⚙ konfigurierbar.
    ============================================================================ */
-const AI_CFG_KEY = "awsclf_ai_cfg_v3";   // v3: Mammouth-Endpoint als Default (überschreibt alten gespeicherten Default)
+const AI_CFG_KEY = "awsclf_ai_cfg_v4";   // v4: Standard-Modell gpt-5.4-mini (überschreibt alten gespeicherten Default)
 const AI_DEFAULT_SYSTEM =
 `Du bist ein erfahrener, geduldiger Tutor für die Zertifizierungsprüfung „AWS Certified Cloud Practitioner" (CLF-C02). Du hilfst der lernenden Person, die AKTUELL ANGEZEIGTE Übungsfrage wirklich zu verstehen — nicht nur WAS richtig ist, sondern WARUM, und warum die anderen Optionen falsch sind.
 
@@ -4491,7 +4492,7 @@ Arbeitsweise:
 - Fasse dich klar und nicht unnötig lang.`;
 const AI_DEFAULTS = {
   endpoint: "https://api.mammouth.ai/v1/chat/completions",   // Mammouth.ai (OpenAI-kompatibel)
-  model: "gpt-5.5",            // bei Mammouth identischer Modellname; günstiger ginge "gpt-5.4-mini"
+  model: "gpt-5.4-mini",       // günstig (~1/10 von gpt-5.5) — reicht für Frageerklärungen locker; schont das Prepaid-Guthaben
   role: "developer",           // 5.x/o-Serie: "developer" statt "system" (per ⚙ umstellbar)
   temperature: "",             // leer = NICHT senden (5.x-Reasoning verlangt sonst temperature=1)
   reasoningEffort: "",         // leer = Modell-Standard; sonst low|medium|high|xhigh
@@ -4711,7 +4712,7 @@ function populateCfg(){
   const box=document.getElementById("chatCfg");
   box.innerHTML = `
     <label>Modell</label><input id="cfgModel" value="${escapeAttr(AICFG.model)}">
-    <p style="font-size:11px;color:var(--muted);margin:3px 0 0">Mammouth-Modell · Standard: <b>gpt-5.5</b> · günstigere Alternative: <b>gpt-5.4-mini</b></p>
+    <p style="font-size:11px;color:var(--muted);margin:3px 0 0">Mammouth-Modell · Standard: <b>gpt-5.4-mini</b> (günstig, empfohlen) · stärker &amp; teurer: <b>gpt-5.5</b></p>
     <label>Endpoint (Chat Completions)</label><input id="cfgEndpoint" value="${escapeAttr(AICFG.endpoint)}">
     <div class="row">
       <div><label>Reasoning-Aufwand</label>
@@ -4782,7 +4783,7 @@ function wireChat(){
     const id = (S && S.order) ? S.order[S.pos] : null;
     const answered = id!=null && S.committed && S.committed[id];
     const msg = answered
-      ? "Hallo! Erkläre mir bitte diese Frage: warum ist die richtige Antwort richtig — und warum sind die anderen Optionen falsch?"
+      ? "Erkläre mir bitte diese Frage: warum ist die richtige Antwort richtig — und warum sind die anderen Optionen falsch?"
       : "Hallo! Ich bin mir bei dieser Frage noch unsicher. Gib mir bitte zuerst einen Denkanstoß, ohne die richtige Antwort direkt zu verraten.";
     aiSend(msg);
   };
@@ -4790,7 +4791,7 @@ function wireChat(){
 }
 
 /* ============================================================================
-   KI-ADAPTIVER MODUS — GPT (Standard gpt-5.5) wählt dynamisch die nächste Frage.
+   KI-ADAPTIVER MODUS — GPT (Standard gpt-5.4-mini) wählt dynamisch die nächste Frage.
    Nur verfügbar, wenn ein API-Key vorliegt. Antworten der KI werden PROGRAMMATISCH
    (JSON.parse) verarbeitet → striktes JSON-Schema, max. 1 Retry, sonst Fallback.
    ============================================================================ */
