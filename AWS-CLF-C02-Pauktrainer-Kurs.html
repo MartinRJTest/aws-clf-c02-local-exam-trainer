@@ -4782,7 +4782,7 @@ function wireChat(){
     const id = (S && S.order) ? S.order[S.pos] : null;
     const answered = id!=null && S.committed && S.committed[id];
     const msg = answered
-      ? "Erkläre mir bitte diese Frage: warum ist die richtige Antwort richtig — und warum sind die anderen Optionen falsch?"
+      ? "Hallo! Erkläre mir bitte diese Frage: warum ist die richtige Antwort richtig — und warum sind die anderen Optionen falsch?"
       : "Hallo! Ich bin mir bei dieser Frage noch unsicher. Gib mir bitte zuerst einen Denkanstoß, ohne die richtige Antwort direkt zu verraten.";
     aiSend(msg);
   };
