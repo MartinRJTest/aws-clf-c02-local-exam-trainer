@@ -397,6 +397,13 @@
     <h3>API-Key</h3>
     <p>Den Mammouth API-Key verwaltest du direkt über die Zeile „🔑 KI-Assistent …" auf der Startseite (aktivieren, ändern, entfernen). Solange kein Key gespeichert ist, kann das Tool keine API-Aufrufe machen — es entstehen also keine Kosten.</p>
 
+    <div id="keyPersistBox" style="display:none">
+      <label class="ovrow"><input type="checkbox" id="setKeyPersist"> <span>API-Key dauerhaft im <b>localStorage</b> dieses Browsers speichern, damit er <b>einen Monat lang</b> erhalten bleibt — auch nach dem Schließen des Browser-Fensters. Standardmäßig ist diese Option <b>aus</b>: dann liegt der Key nur im flüchtigen Sitzungsspeicher und verschwindet beim Schließen des Fensters. Beim Deaktivieren wird der Key sofort aus dem localStorage gelöscht und wieder ausschließlich im Sitzungsspeicher gehalten.</span></label>
+      <p style="margin-top:6px;padding:10px 12px;border:1px solid #c46a1d;border-radius:8px;background:rgba(196,106,29,.12);font-size:13px;line-height:1.5">⚠ <b>Warnung — Nutzung ausdrücklich auf eigene Gefahr.</b><br>
+      Diese Option ist eine reine Komfortfunktion. Wird sie aktiviert, speichert <u>dein eigener Browser</u> den API-Key unverschlüsselt im localStorage auf <u>diesem Gerät</u>. Wer Zugriff auf dieses Gerät, dieses Browser-Profil oder den Browser-Speicher hat, kann den Key auslesen und damit auf deine Kosten API-Aufrufe tätigen. Auf gemeinsam genutzten, öffentlichen oder unbeaufsichtigten Geräten solltest du diese Option <b>niemals</b> aktivieren.<br>
+      Du aktivierst sie freiwillig und in eigener Verantwortung. Die <b>alleinige Verantwortung</b> für den API-Key, seine Geheimhaltung sowie für sämtliche Folgen, Kosten oder Schäden aus Verlust, Diebstahl oder missbräuchlicher Nutzung liegt <b>ausschließlich bei dir</b>. Der Kurs, die Kursleitung und der/die Bereitsteller:in dieses Tools übernehmen <b>keinerlei Haftung</b>. Im Zweifel: Option aus lassen und den Key bei Bedarf neu eingeben.</p>
+    </div>
+
     <h3>Chat-Verlauf sichern</h3>
     <p>Exportiert den Verlauf deiner KI-Assistent-Chats <b>aller</b> Fragen als einfache Textdatei (.txt) — als Sicherungskopie zum Nachlesen. Der Verlauf bleibt auch nach dem Schließen des Tabs erhalten; bei sehr großem Umfang (ab ca. 3&nbsp;MB) werden automatisch die ältesten Chats verworfen.</p>
     <button class="btn ghost" id="ovExport" type="button">Chat-Verlauf exportieren (.txt)</button>
@@ -5880,6 +5887,12 @@ function openManage(){
   const sh=document.getElementById("setShuffle"); if(sh) sh.checked = SET.shuffle!==false;
   const le=document.getElementById("setLenient"); if(le) le.checked = !!SET.lenient;
   const er=document.getElementById("setExtendRepeat"); if(er) er.checked = SET.extendOnRepeat!==false;
+  // Persistenz-Option NUR anzeigen, wenn überhaupt ein Key vorliegt.
+  const kpBox=document.getElementById("keyPersistBox");
+  if(kpBox){
+    if(AI.key){ kpBox.style.display=""; const cb=document.getElementById("setKeyPersist"); if(cb) cb.checked = keyPersisted(); }
+    else { kpBox.style.display="none"; }
+  }
   o.classList.add("on");
 }
 function closeManage(){ const o=document.getElementById("manageOverlay"); if(o) o.classList.remove("on"); }
@@ -5891,6 +5904,22 @@ function wireManage(){
   const sh=document.getElementById("setShuffle"); if(sh) sh.onchange=()=>{ SET.shuffle=sh.checked; saveSettings(); };
   const le=document.getElementById("setLenient"); if(le) le.onchange=()=>{ SET.lenient=le.checked; saveSettings(); };
   const er=document.getElementById("setExtendRepeat"); if(er) er.onchange=()=>{ SET.extendOnRepeat=er.checked; saveSettings(); };
+  const kp=document.getElementById("setKeyPersist");
+  if(kp) kp.onchange=()=>{
+    if(kp.checked){
+      if(!AI.key){ kp.checked=false; return; }
+      if(!confirm("API-Key dauerhaft auf DIESEM Gerät speichern (1 Monat) — auf EIGENE GEFAHR.\n\n• Der Key wird unverschlüsselt im Browser-Speicher dieses Geräts abgelegt und bleibt auch nach dem Schließen des Fensters erhalten.\n• Wer Zugriff auf dieses Gerät/Browser-Profil hat, kann den Key auslesen und auf deine Kosten nutzen.\n• Niemals auf gemeinsam genutzten oder öffentlichen Geräten aktivieren.\n• Die alleinige Verantwortung für den Key liegt bei dir.\n\nTrotzdem aktivieren?")){
+        kp.checked=false; return;
+      }
+      if(!enableKeyPersist()){
+        kp.checked=false;
+        alert("Speichern fehlgeschlagen: Dieser Browser erlaubt keinen dauerhaften Speicher (z. B. privater Modus oder blockierter Speicher). Der Key bleibt nur für dieses Fenster aktiv.");
+        return;
+      }
+    } else {
+      disableKeyPersist();
+    }
+  };
   const ex=document.getElementById("ovExport"); if(ex) ex.onclick=exportChatBackup;
   const w=document.getElementById("ovWipe");    if(w)  w.onclick=()=>{ closeManage(); wipeAll(); };
   const wa=document.getElementById("ovWipeAll"); if(wa) wa.onclick=()=>{ closeManage(); wipeEverything(); };
@@ -6035,6 +6064,7 @@ function wipeEverything(){
   if(!confirm("Letzte Sicherheitsabfrage: wirklich ALLE lokalen Daten inkl. API-Key endgültig löschen? Das kann NICHT rückgängig gemacht werden.")) return;
   try{ [HIST_KEY, SES_KEY, SET_KEY, AI_CFG_KEY].forEach(k=>localStorage.removeItem(k)); }catch(e){}
   try{ sessionStorage.removeItem(AI_KEY_SS); }catch(e){}
+  clearPersistedKey();   // auch den dauerhaft gespeicherten Key (localStorage) entfernen
   clearChat(); clearChatLog();
   AI.key=null; AI.turns=[]; AI.boundId=null; AI.busy=false;
   HIST={runs:[]}; S=null; SET={...SET_DEFAULTS}; AICFG={...AI_DEFAULTS};
@@ -6143,8 +6173,58 @@ function saveAICfg(){ try{ localStorage.setItem(AI_CFG_KEY, JSON.stringify(AICFG
 let AICFG = loadAICfg();
 
 const AI_KEY_SS = "awsclf_mammouth_key";   // API-Key liegt im sessionStorage (gilt nur solange das Fenster offen ist)
-function loadKey(){ try{ return sessionStorage.getItem(AI_KEY_SS) || null; }catch(e){ return null; } }
-function storeKey(k){ try{ if(k) sessionStorage.setItem(AI_KEY_SS, k); else sessionStorage.removeItem(AI_KEY_SS); }catch(e){} }
+const AI_KEY_PERSIST_LS = "awsclf_mammouth_key_persist"; // OPTIONALE Persistenz: Eintrag {k, exp} im localStorage (1 Monat, überdauert das Fenster) — nur wenn der Nutzer das in ⚙ aktiviert
+const AI_KEY_MAXAGE_MS = 30*24*60*60*1000;  // 30 Tage
+/* Persistenten Eintrag lesen; abgelaufene oder defekte Einträge werden dabei sofort entsorgt. */
+function readPersistedKey(){
+  try{
+    const raw = localStorage.getItem(AI_KEY_PERSIST_LS);
+    if(raw){
+      const o = JSON.parse(raw);
+      if(o && o.k && typeof o.exp==="number" && o.exp>Date.now()) return o.k;
+    }
+  }catch(e){}
+  try{ localStorage.removeItem(AI_KEY_PERSIST_LS); }catch(e){}   // abgelaufen/defekt → aufräumen
+  return null;
+}
+/* Persistenz aktiv = es liegt ein gültiger localStorage-Eintrag vor. */
+function keyPersisted(){ return readPersistedKey()!=null; }
+/* Laden: sessionStorage (flüchtig) hat Vorrang. Ist dort KEINER, wird der persistente
+   localStorage-Eintrag geprüft und – falls vorhanden – in den sessionStorage gespiegelt,
+   damit es zur Laufzeit nur EINE Quelle gibt. */
+function loadKey(){
+  try{ const v = sessionStorage.getItem(AI_KEY_SS); if(v) return v; }catch(e){}
+  const p = readPersistedKey();
+  if(p){ try{ sessionStorage.setItem(AI_KEY_SS, p); }catch(e){} return p; }
+  return null;
+}
+/* Speichern: sessionStorage ist immer der Arbeitsspeicher. Der persistente Eintrag wird nur dann
+   mitgeführt, wenn die Persistenz bereits aktiv ist – so können beide nie auseinanderlaufen. */
+function storeKey(k){
+  try{ if(k) sessionStorage.setItem(AI_KEY_SS, k); else sessionStorage.removeItem(AI_KEY_SS); }catch(e){}
+  if(keyPersisted()){
+    if(k) writePersistedKey(k); else clearPersistedKey();
+  }
+}
+function writePersistedKey(k){
+  try{ localStorage.setItem(AI_KEY_PERSIST_LS, JSON.stringify({k:k, exp:Date.now()+AI_KEY_MAXAGE_MS})); }catch(e){}
+}
+function clearPersistedKey(){
+  try{ localStorage.removeItem(AI_KEY_PERSIST_LS); }catch(e){}
+}
+/* ⚙-Verwaltung: Persistenz ein-/ausschalten. Rückgabe von enable: true, wenn die Speicherung
+   nachweislich griff (sofort wieder auslesbar) – sonst false (z.B. localStorage gesperrt). */
+function enableKeyPersist(){
+  if(!AI.key) return false;
+  writePersistedKey(AI.key);
+  return readPersistedKey()===AI.key;   // Selbsttest: wurde wirklich gespeichert?
+}
+function disableKeyPersist(){
+  // Key zurück in den flüchtigen Speicher holen (falls nur persistent vorhanden), dann persistenten Eintrag löschen.
+  const p = readPersistedKey();
+  if(p){ try{ sessionStorage.setItem(AI_KEY_SS, p); }catch(e){} if(!AI.key) AI.key = p; }
+  clearPersistedKey();
+}
 const AI_CHAT_LS = "awsclf_ai_chat";   // Chat-Verlauf der AKTUELLEN Frage (localStorage; übersteht Reload UND Browser-/Tab-Crash)
 function storeChat(){ try{ localStorage.setItem(AI_CHAT_LS, JSON.stringify({ boundId:AI.boundId, turns:AI.turns })); }catch(e){} }
 function loadChat(){ try{ let v = localStorage.getItem(AI_CHAT_LS); if(v==null){ v = sessionStorage.getItem(AI_CHAT_LS); if(v!=null){ localStorage.setItem(AI_CHAT_LS, v); sessionStorage.removeItem(AI_CHAT_LS); } } return JSON.parse(v); }catch(e){ return null; } }
@@ -6204,7 +6284,7 @@ function askKey(initial){
   // Liegt aus dieser Browser-Sitzung bereits ein Key vor, beim Start NICHT erneut fragen.
   if(initial && AI.key){ updateChatFoot(); renderChatLog(); return; }
   const msg = "Mammouth API-Key für den KI-Lernassistenten eingeben.\n\n• Gilt nur in diesem Browser-Fenster (sessionStorage) — beim Schließen des Fensters wird er gelöscht.\n• Du findest deinen Key in deinem Mammouth-Konto unter: Einstellungen → API.\n• Leer lassen = Assistent bleibt deaktiviert.";
-  const v = window.prompt(msg, AI.key || "");
+  const v = window.prompt(msg, "");
   if(v && v.trim()){ AI.key = v.trim(); storeKey(AI.key); }
   else if(initial){ AI.key = null; }
   updateChatFoot(); renderChatLog();
