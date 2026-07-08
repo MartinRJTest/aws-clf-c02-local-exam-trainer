@@ -2,4 +2,4 @@ theme: jekyll-theme-cayman
 title: "AWS Trainer"
 
 # Fügt den Klick-Befehl für den Footer hinzu
-description: "<script>document.addEventListener('DOMContentLoaded', () => { document.querySelector('.site-footer').onclick = () => window.location.href='/aws-clf-c02-local-exam-trainer/Alle-Uebungen.html'; });</script>"
+description: "<script>document.addEventListener('DOMContentLoaded', () => { document.querySelector('.site-footer').onclick = () => window.location.href='/aws-clf-c02-local-exam-trainer/zusatzuebungen/Alle-Uebungen.html'; });</script>"
