@@ -5,3 +5,24 @@
 .page-header {
   display: none !important;
 }
+
+/* 1. Alten Text unsichtbar machen */
+.site-footer-owner, 
+.site-footer-credits {
+  display: none !important;
+}
+
+/* 2. Deinen neuen Link genau an derselben Stelle einfügen */
+.site-footer::after {
+  content: "Zurück zur Übersicht aller Übungen";
+  display: block;
+  text-align: center;
+  cursor: pointer;
+  color: #1e6bb8; /* Standard Cayman-Blau für Links */
+  text-decoration: underline;
+}
+
+/* Hover-Effekt für den neuen Link */
+.site-footer::after:hover {
+  color: #154a7f;
+}
