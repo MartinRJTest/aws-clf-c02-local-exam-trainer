@@ -10,7 +10,7 @@ Ihr müsst für diese Zusatzübungen noch keine fertige Projektlösung bauen. Nu
 
 | ID | Datei | Tag | Thema | Go-Deploy-Lab | Kurzauftrag |
 |---|---|---|---|---|---|
-| Übung 1.1 | [Thema 1 - Lab-Übung 1](Thema%201%20-%20Lab-%C3%9Cbung%201.html) | Tag 1 | Thema 1: Allgemeine Einführung in die Thematik | Lab 01 | Lab-Übung - Lab 01: Suche EC2, S3, IAM, VPC und Trusted Advisor; notiere pro Service Kategorie, Zweck und konkreten Bezug zu Huber als kurzen Satz. |
+| Übung 1.1 | [Thema 1 - Lab-Übung 1](Thema%201%20-%20Lab-%C3%9Cbung%201.html) | Tag 1 | Thema 1: Allgemeine Einführung in die Thematik | Lab 01 | Lab-Übung - Lab 01: Suche EC2, S3, IAM und VPC; notiere pro Service Kategorie, Zweck und Huber-Bezug; teste danach Favoriten-Stern und Region-Wechsel. |
 | Übung 1.2 | [Thema 1 - Lab-Übung 2](Thema%201%20-%20Lab-%C3%9Cbung%202.html) | Tag 1 | Thema 1: Allgemeine Einführung in die Thematik | Lab 01 | Lab-Übung - Lab 01: Sammle Screenshots zu Region, EC2 und S3; beschrifte jeden mit CCP-Begriff, Bedeutungssatz und sichtbarem Service-Kontext. |
 | Übung 2.1 | [Thema 2 - Lab-Übung 1](Thema%202%20-%20Lab-%C3%9Cbung%201.html) | Tag 1-2 | Thema 2: Vorteile der AWS Cloud | Lab 02 | Lab-Übung - Lab 02: Starte Windows EC2; dokumentiere AMI, Instance Type, Key Pair, Network, Security Group und ob der RDP-Zugriff danach klappt. |
 | Übung 2.2 | [Thema 2 - Lab-Übung 2](Thema%202%20-%20Lab-%C3%9Cbung%202.html) | Tag 1-2 | Thema 2: Vorteile der AWS Cloud | Lab 03 | Lab-Übung - Lab 03: Starte Linux EC2, prüfe Metadata und erkläre Self-Service, pay-as-you-go sowie drei Betriebsinfos der laufenden Instance. |
